@@ -26,4 +26,13 @@ jobs:
             echo "Branch name does not match required pattern. Exiting."
             exit 1
           fi
+            - name: Get issue node ID
+        id: get_node_id
+        run: |
+          ISSUE_NUMBER=${{ steps.extract.outputs.ISSUE_NUMBER }}
+          RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"query { repository(owner: \\\"$OWNER\\\", name: \\\"$REPO\\\") { issue(number: $ISSUE_NUMBER) { id } } }\"}" \
+            https://api.github.com/graphql)
 
+          echo "$RESPONSE" 
