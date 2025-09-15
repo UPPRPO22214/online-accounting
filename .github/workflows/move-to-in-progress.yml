@@ -77,6 +77,28 @@ jobs:
               break
             fi
           done
+      - name: Move issue to In Progress
+        run: |
+          ITEM_ID=${{ steps.get_item_id.outputs.ITEM_ID }}
+          FIELD_ID="PVTSSF_lADODcMvQs4BDA_jzg1Dttg"
+          OPTION_ID="47fc9ee4"                      
+      
+          RESPONSE=$(curl -s -X POST https://api.github.com/graphql \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: \\\"$PROJECT_ID\\\",
+                itemId: \\\"$ITEM_ID\\\",
+                fieldId: \\\"$FIELD_ID\\\",
+                value: { singleSelectOptionId: \\\"$OPTION_ID\\\" }
+              }) {
+                projectV2Item { id }
+              }
+            }\"}")
+      
+          echo "Response: $RESPONSE"
+
       
           echo "Project item for issue not found."
           exit 1
