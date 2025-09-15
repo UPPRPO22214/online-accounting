@@ -81,14 +81,24 @@ jobs:
         run: |
           ITEM_ID=${{ steps.get_item_id.outputs.ITEM_ID }}
           FIELD_ID="PVTSSF_lADODcMvQs4BDA_jzg1Dttg"
-          OPTION_ID="47fc9ee4"                      
-      
+          OPTION_ID="47fc9ee4"
+        
           RESPONSE=$(curl -s -X POST https://api.github.com/graphql \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"query\":\"mutation { updateProjectV2ItemFieldValue(input: { projectId: \\\"$PROJECT_ID\\\", itemId: \\\"$ITEM_ID\\\", fieldId: \\\"$FIELD_ID\\\", value: { singleSelectOptionId: \\\"$OPTION_ID\\\" }}) { projectV2Item { id }}}\"}")
-      
+        
           echo "Response: $RESPONSE"
+        
+          UPDATED_ID=$(echo "$RESPONSE" | jq -r '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+        
+          if [ "$UPDATED_ID" = "null" ] || [ -z "$UPDATED_ID" ]; then
+            echo "Failed to update project item field."
+            exit 1
+          fi
+        
+          echo "Project item moved to In Progress successfully."
+
 
       
           echo "Project item for issue not found."
