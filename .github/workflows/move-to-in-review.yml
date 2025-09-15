@@ -17,7 +17,7 @@ jobs:
       - name: Check branch pattern and extract issue number
         id: extract
         run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_NAME="${{ github.head_ref }}"
           echo "Branch name: $BRANCH_NAME"
           if echo "$BRANCH_NAME" | grep -Eq '^(feature|bugfix|chore|docs|refactor|test)/([0-9]+)'; then
             ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+')
