@@ -10,47 +10,35 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
-      PROJECT_ID: "PVT_kwDODcMvQs4BDA_j"     
-      OWNER: "UPPRPO22214"                  
-      REPO: "online-accounting"            
-
+      PROJECT_ID: "PVT_kwDODcMvQs4BDA_j"  
+      OWNER: "UPPRPO22214"
+      REPO: "online-accounting"
     steps:
-      - name: Check branch pattern and extract issue number 
+      - name: Check branch pattern and extract issue number
         id: extract
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "Branch name: $BRANCH_NAME"
-
-          if echo "$BRANCH_NAME" | grep -Eq '^(feature|bugfix|chore|docs|refactor|test)/[0-9]+'; then
-            ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '^[^/]+/([0-9]+)' | grep -oE '[0-9]+')
+          if echo "$BRANCH_NAME" | grep -Eq '^(feature|bugfix|chore|docs|refactor|test)/([0-9]+)'; then
+            ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+')
+            echo "Issue number extracted: $ISSUE_NUMBER"
             echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
           else
             echo "Branch name does not match required pattern. Exiting."
             exit 1
           fi
-
       - name: Get issue node ID
         id: get_node_id
         run: |
           ISSUE_NUMBER=${{ steps.extract.outputs.ISSUE_NUMBER }}
-
-          QUERY=$(jq -n \
-            --arg owner "$OWNER" \
-            --arg repo "$REPO" \
-            --argjson number "$ISSUE_NUMBER" \
-            '{query: "query { repository(owner: \($owner), name: \($repo)) { issue(number: \($number)) { id } } }"}')
-
           RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-                         -H "Content-Type: application/json" \
-                         -d "$QUERY" https://api.github.com/graphql)
-
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"query { repository(owner: \\\"$OWNER\\\", name: \\\"$REPO\\\") { issue(number: $ISSUE_NUMBER) { id } } }\"}" \
+            https://api.github.com/graphql)
           NODE_ID=$(echo "$RESPONSE" | jq -r '.data.repository.issue.id')
-
-          if [ -z "$NODE_ID" ] || [ "$NODE_ID" = "null" ]; then
-            echo "Issue not found or error in query."
+          if [ "$NODE_ID" = "null" ] || [ -z "$NODE_ID" ]; then
+            echo "Issue not found or error in query"
             exit 1
           fi
-
           echo "Node Id extracted: $NODE_ID"
-          echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT
-
+          echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT 
