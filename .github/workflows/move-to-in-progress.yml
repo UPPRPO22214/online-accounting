@@ -98,9 +98,4 @@ jobs:
           fi
         
           echo "Project item moved to In Progress successfully."
-
-
-      
-          echo "Project item for issue not found."
-          exit 1
       
