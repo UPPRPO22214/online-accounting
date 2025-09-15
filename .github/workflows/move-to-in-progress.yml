@@ -37,4 +37,10 @@ jobs:
             -d "{\"query\":\"query { repository(owner: \\\"$OWNER\\\", name: \\\"$REPO\\\") { issue(number: $ISSUE_NUMBER) { id } } }\"}" \
             https://api.github.com/graphql)
 
-          echo "$RESPONSE" 
+          NODE_ID=$(echo "$RESPONSE" | jq -r '.data.repository.issue.id')
+          if [ "$NODE_ID" = "null" ] || [ -z "$NODE_ID" ]; then
+            echo "Issue not found or error in query"
+            exit 1
+          fi
+          echo "Node Id extracted: $NODE_ID"
+          echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT 
