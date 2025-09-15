@@ -42,3 +42,42 @@ jobs:
           fi
           echo "Node Id extracted: $NODE_ID"
           echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT 
+      - name: Get project item ID for the issue
+        id: get_item_id
+        run: |
+          ISSUE_NODE_ID=${{ steps.get_node_id.outputs.NODE_ID }}
+          GH_TOKEN="$GH_TOKEN"
+          END_CURSOR=""
+          HAS_NEXT_PAGE=true
+          ITEM_ID=""
+      
+          while [ "$HAS_NEXT_PAGE" = "true" ]; do
+            if [ -z "$END_CURSOR" ]; then
+              AFTER_PART=""
+            else
+              AFTER_PART=", after: \\\"$END_CURSOR\\\""
+            fi
+      
+            RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                           -H "Content-Type: application/json" \
+                           -d "{\"query\":\"query { node(id: \\\"$PROJECT_ID\\\") { ... on ProjectV2 { items(first: 100$AFTER_PART) { nodes { id content { ... on Issue { id number } } } pageInfo { hasNextPage endCursor } } } } }\"}" \
+                           https://api.github.com/graphql)
+            echo "$RESPONSE"
+            ITEM_ID=$(echo "$RESPONSE" | jq -r --arg ISSUE_NODE_ID "$ISSUE_NODE_ID" '.data.node.items.nodes[] | select(.content.id == $ISSUE_NODE_ID) | .id')
+      
+            if [ -n "$ITEM_ID" ] && [ "$ITEM_ID" != "null" ]; then
+              echo "ITEM_ID=$ITEM_ID" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+      
+            HAS_NEXT_PAGE=$(echo "$RESPONSE" | jq -r '.data.node.items.pageInfo.hasNextPage')
+            END_CURSOR=$(echo "$RESPONSE" | jq -r '.data.node.items.pageInfo.endCursor')
+      
+            if [ "$HAS_NEXT_PAGE" != "true" ]; then
+              break
+            fi
+          done
+      
+          echo "Project item for issue not found."
+          exit 1
+      
