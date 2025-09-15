@@ -11,6 +11,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
       PROJECT_ID: "PVT_kwDODcMvQs4BDA_j"  
+      OWNER: "UPPRPO22214"
+      REPO: "online-accounting"
     steps:
       - name: Check branch pattern and extract issue number
         id: extract
