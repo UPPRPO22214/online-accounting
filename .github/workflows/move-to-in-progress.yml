@@ -56,4 +56,4 @@ jobs:
             exit 1
           fi          
           echo "Node Id extracted: $NODE_ID"
-          echo "NODE_ID=$NODE_ID" >> GITHUB_OUTPUT
+          echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT
