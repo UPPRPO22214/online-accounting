@@ -86,16 +86,7 @@ jobs:
           RESPONSE=$(curl -s -X POST https://api.github.com/graphql \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation {
-              updateProjectV2ItemFieldValue(input: {
-                projectId: \\\"$PROJECT_ID\\\",
-                itemId: \\\"$ITEM_ID\\\",
-                fieldId: \\\"$FIELD_ID\\\",
-                value: { singleSelectOptionId: \\\"$OPTION_ID\\\" }
-              }) {
-                projectV2Item { id }
-              }
-            }\"}")
+            -d "{\"query\":\"mutation { updateProjectV2ItemFieldValue(input: { projectId: \\\"$PROJECT_ID\\\", itemId: \\\"$ITEM_ID\\\", fieldId: \\\"$FIELD_ID\\\", value: { singleSelectOptionId: \\\"$OPTION_ID\\\" }}) { projectV2Item { id }}}\"}")
       
           echo "Response: $RESPONSE"
 
