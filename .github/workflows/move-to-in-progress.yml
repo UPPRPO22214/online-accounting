@@ -26,7 +26,7 @@ jobs:
             echo "Branch name does not match required pattern. Exiting."
             exit 1
           fi
-            - name: Get issue node ID
+      - name: Get issue node ID
         id: get_node_id
         run: |
           ISSUE_NUMBER=${{ steps.extract.outputs.ISSUE_NUMBER }}
