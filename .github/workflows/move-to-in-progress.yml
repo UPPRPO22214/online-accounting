@@ -11,11 +11,11 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
       PROJECT_ID: "PVT_kwDODcMvQs4BDA_j"     
-      OWNER: "UPPRPO22214"                   
-      REPO: "online-accounting"              
+      OWNER: "UPPRPO22214"                  
+      REPO: "online-accounting"            
 
     steps:
-      - name: Check branch pattern and extract issue number
+      - name: Check branch pattern and extract issue number 
         id: extract
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
@@ -34,16 +34,11 @@ jobs:
         run: |
           ISSUE_NUMBER=${{ steps.extract.outputs.ISSUE_NUMBER }}
 
-          QUERY=$(jq -nc --arg owner "$OWNER" --arg repo "$REPO" --arg number "$ISSUE_NUMBER" \
-            '{ query: "query { 
-                repository(owner: \($owner), name: \($repo)) { 
-                  issue(number: \($number | tonumber)) { 
-                    id 
-                  } 
-                } 
-              }" 
-            }'
-          )
+          QUERY=$(jq -n \
+            --arg owner "$OWNER" \
+            --arg repo "$REPO" \
+            --argjson number "$ISSUE_NUMBER" \
+            '{query: "query { repository(owner: \($owner), name: \($repo)) { issue(number: \($number)) { id } } }"}')
 
           RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
                          -H "Content-Type: application/json" \
@@ -51,9 +46,11 @@ jobs:
 
           NODE_ID=$(echo "$RESPONSE" | jq -r '.data.repository.issue.id')
 
-          if [ -z "$NODE_ID" ] || [ "$NODE_ID" == "null" ]; then
+          if [ -z "$NODE_ID" ] || [ "$NODE_ID" = "null" ]; then
             echo "Issue not found or error in query."
             exit 1
-          fi          
+          fi
+
           echo "Node Id extracted: $NODE_ID"
           echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT
+
