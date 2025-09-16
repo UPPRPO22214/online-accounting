@@ -1,0 +1,104 @@
+name: Move Issue to Done on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  move-to-done:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
+      PROJECT_ID: "PVT_kwDODcMvQs4BDA_j"
+      OWNER: "UPPRPO22214"
+      REPO: "online-accounting"
+
+    steps:
+      - name: Extract issue number from branch
+        id: extract
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          if echo "$BRANCH_NAME" | grep -Eq '^(feature|bugfix|chore|docs|refactor|test)/([0-9]+)'; then
+            ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+')
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "Branch name doesn't match pattern, skipping."
+            exit 0
+          fi
+
+      - name: Get issue node ID
+        id: get_node_id
+        run: |
+          ISSUE_NUMBER=${{ steps.extract.outputs.ISSUE_NUMBER }}
+          RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"query { repository(owner: \\\"$OWNER\\\", name: \\\"$REPO\\\") { issue(number: $ISSUE_NUMBER) { id } } }\"}" \
+            https://api.github.com/graphql)
+          NODE_ID=$(echo "$RESPONSE" | jq -r '.data.repository.issue.id')
+          if [ "$NODE_ID" = "null" ] || [ -z "$NODE_ID" ]; then
+            echo "Issue not found"
+            exit 1
+          fi
+          echo "NODE_ID=$NODE_ID" >> $GITHUB_OUTPUT
+
+      - name: Get project item ID
+        id: get_item_id
+        run: |
+          ISSUE_NODE_ID=${{ steps.get_node_id.outputs.NODE_ID }}
+          GH_TOKEN="$GH_TOKEN"
+          END_CURSOR=""
+          HAS_NEXT_PAGE=true
+          ITEM_ID=""
+
+          while [ "$HAS_NEXT_PAGE" = "true" ]; do
+            if [ -z "$END_CURSOR" ]; then
+              AFTER_PART=""
+            else
+              AFTER_PART=", after: \\\"$END_CURSOR\\\""
+            fi
+
+            RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                           -H "Content-Type: application/json" \
+                           -d "{\"query\":\"query { node(id: \\\"$PROJECT_ID\\\") { ... on ProjectV2 { items(first: 100$AFTER_PART) { nodes { id content { ... on Issue { id number } } } pageInfo { hasNextPage endCursor } } } } }\"}" \
+                           https://api.github.com/graphql)
+            ITEM_ID=$(echo "$RESPONSE" | jq -r --arg ISSUE_NODE_ID "$ISSUE_NODE_ID" '.data.node.items.nodes[] | select(.content.id == $ISSUE_NODE_ID) | .id')
+
+            if [ -n "$ITEM_ID" ] && [ "$ITEM_ID" != "null" ]; then
+              echo "ITEM_ID=$ITEM_ID" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            HAS_NEXT_PAGE=$(echo "$RESPONSE" | jq -r '.data.node.items.pageInfo.hasNextPage')
+            END_CURSOR=$(echo "$RESPONSE" | jq -r '.data.node.items.pageInfo.endCursor')
+
+            if [ "$HAS_NEXT_PAGE" != "true" ]; then
+              break
+            fi
+          done
+
+      - name: Move to Done
+        run: |
+          ITEM_ID=${{ steps.get_item_id.outputs.ITEM_ID }}
+          FIELD_ID="PVTSSF_lADODcMvQs4BDA_jzg1Dttg"   
+          OPTION_ID="98236657"                          
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "No project item ID found, skipping update"
+            exit 0
+          fi
+
+          RESPONSE=$(curl -s -X POST https://api.github.com/graphql \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { updateProjectV2ItemFieldValue(input: { projectId: \\\"$PROJECT_ID\\\", itemId: \\\"$ITEM_ID\\\", fieldId: \\\"$FIELD_ID\\\", value: { singleSelectOptionId: \\\"$OPTION_ID\\\" }}) { projectV2Item { id }}}\"}")
+
+          UPDATED_ID=$(echo "$RESPONSE" | jq -r '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+
+          if [ "$UPDATED_ID" = "null" ] || [ -z "$UPDATED_ID" ]; then
+            echo "Failed to move to Done"
+            exit 1
+          fi
+
+          echo "Successfully moved issue to Done!"
+
