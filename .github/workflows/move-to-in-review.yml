@@ -2,7 +2,7 @@ name: Move Issue to In Review
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, review_requested]
 
 jobs:
   move-to-in-review:
