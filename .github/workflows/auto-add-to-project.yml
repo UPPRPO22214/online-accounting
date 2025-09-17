@@ -1,0 +1,25 @@
+name: Add Issue to GitHub Project
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    if: github.event.issue.pull_request == null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to GitHub Project
+        env:
+          GH_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          echo "Adding issue $ISSUE_ID to project..."
+
+          curl -s -X POST https://api.github.com/graphql \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "query": "mutation { addProjectV2ItemById(input: {projectId: \"PVT_kwDODcMvQs4BDA_j\", contentId: \"'"$ISSUE_ID"'\"}) { item { id } } }"
+            }'
+
