@@ -1,5 +1,5 @@
-import { Route, Switch } from "wouter"
-import { MainPage, AccountPage } from "@/pages"
+import { Route, Switch } from "wouter";
+import { MainPage, AccountPage } from "@/pages";
 
 export const App = () => {
   return (
@@ -18,5 +18,5 @@ export const App = () => {
       </main>
       <footer></footer>
     </>
-  )
-}
+  );
+};

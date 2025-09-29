@@ -4,7 +4,6 @@ import type React from "react";
 import { Link } from "wouter";
 
 export const MainPage: React.FC = () => {
-
   return (
     <div className="w-full flex-col items-center text-center">
       <h1 className="text-4xl mb-10 font-semibold">ChewByes Wallet</h1>
@@ -14,5 +13,5 @@ export const MainPage: React.FC = () => {
       </div>
       <Link href="/account/1">Тестовый счёт 1</Link>
     </div>
-  )
-}
+  );
+};
