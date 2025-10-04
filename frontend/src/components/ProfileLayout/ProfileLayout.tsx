@@ -1,0 +1,43 @@
+import { useAuth } from '@/store/auth';
+import type React from 'react';
+import { Link } from 'wouter';
+
+export const ProfileLayout: React.FC = () => {
+  const { username, logout } = useAuth();
+
+  return (
+    <div className="grid grid-cols-1 gap-6">
+      <h2 className="text-2xl text-center">Привет, {username}</h2>
+      <h3 className="text-lg mt-4">Мои счета</h3>
+      <div className="flex justify-around gap-4">
+        <Link className="hover:bg-gray-200 transition-base" href="/account/1">
+          <div className="p-3 border">Тестовый счёт 1</div>
+        </Link>
+        <Link className="hover:bg-gray-200 transition-base" href="/account/1">
+          <div className="p-3 border">Тестовый счёт 1</div>
+        </Link>
+        <Link className="hover:bg-gray-200 transition-base" href="/account/1">
+          <div className="p-3 border">Тестовый счёт 1</div>
+        </Link>
+      </div>
+      <h3 className="text-lg mt-4">Доступные счета</h3>
+      <div className="flex justify-around gap-4">
+        <Link className="hover:bg-gray-200 transition-base" href="/account/1">
+          <div className="p-3 border">Тестовый счёт 1</div>
+        </Link>
+        <Link className="hover:bg-gray-200 transition-base" href="/account/1">
+          <div className="p-3 border">Тестовый счёт 1</div>
+        </Link>
+        <Link className="hover:bg-gray-200 transition-base" href="/account/1">
+          <div className="p-3 border">Тестовый счёт 1</div>
+        </Link>
+      </div>
+      <button
+        className="p-1 px-3 transition-base bg-gray-200 hover:bg-gray-300 hover:cursor-pointer w-fit m-auto"
+        onClick={() => logout()}
+      >
+        Выйти
+      </button>
+    </div>
+  );
+};

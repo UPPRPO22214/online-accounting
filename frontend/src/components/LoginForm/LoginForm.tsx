@@ -1,14 +1,17 @@
-import clsx from "clsx";
-import type { HTMLAttributes } from "react";
-import type React from "react";
+import { useAuth } from '@/store/auth';
+import clsx from 'clsx';
+import type { HTMLAttributes } from 'react';
+import type React from 'react';
 
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
-  return (  
-    <div className={clsx("border p-2", className)}>
+  const { login } = useAuth();
+
+  return (
+    <div className={clsx('border p-2', className)}>
       <h2 className="text-2xl mb-2">Вход</h2>
-      <form action="" className="grid grid-cols-1 gap-4">
+      <form onSubmit={() => login()} className="grid grid-cols-1 gap-4">
         <input
           className="bg-gray-100 p-1"
           type="text"
