@@ -8,7 +8,7 @@ type AuthStoreType = {
   logout: () => void;
 };
 
-export const useAuth = create<AuthStoreType>((set, get) => ({
+export const useAuth = create<AuthStoreType>((set) => ({
   username: 'Чубайс',
   authorized: false,
 

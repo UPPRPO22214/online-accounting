@@ -5,7 +5,7 @@ import { useAuth } from '@/store/auth';
 import type React from 'react';
 
 export const MainPage: React.FC = () => {
-  const { authorized } = useAuth();
+  const authorized = useAuth(state => state.authorized);
 
   return (
     <div className="w-full flex-col items-center text-center">

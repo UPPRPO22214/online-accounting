@@ -6,7 +6,7 @@ import type React from 'react';
 type RegisterFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
-  const { login } = useAuth();
+  const login = useAuth(state => state.login);
 
   return (
     <div className={clsx('border p-2', className)}>

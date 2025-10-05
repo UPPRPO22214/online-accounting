@@ -3,7 +3,8 @@ import type React from 'react';
 import { Link } from 'wouter';
 
 export const ProfileLayout: React.FC = () => {
-  const { username, logout } = useAuth();
+  const username = useAuth(state => state.username);
+  const logout = useAuth(state => state.logout);
 
   return (
     <div className="grid grid-cols-1 gap-6">

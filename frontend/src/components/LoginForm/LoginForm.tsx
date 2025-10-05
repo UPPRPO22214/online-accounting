@@ -6,7 +6,7 @@ import type React from 'react';
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
-  const { login } = useAuth();
+  const login = useAuth(state => state.login);
 
   return (
     <div className={clsx('border p-2', className)}>
