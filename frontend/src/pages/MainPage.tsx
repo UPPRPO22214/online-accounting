@@ -1,7 +1,7 @@
 import { LoginForm } from '@/components/LoginForm';
 import { ProfileLayout } from '@/components/ProfileLayout';
 import { RegisterForm } from '@/components/RegisterForm';
-import { useAuth } from '@/store/auth';
+import { useAuth } from '@/state/auth';
 import type React from 'react';
 
 export const MainPage: React.FC = () => {

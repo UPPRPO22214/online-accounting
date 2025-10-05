@@ -4,14 +4,18 @@ type AuthStoreType = {
   username: string;
   authorized: boolean;
 
-  login: () => void;
-  logout: () => void;
+  actions: {
+    login: () => void;
+    logout: () => void;
+  };
 };
 
 export const useAuth = create<AuthStoreType>((set) => ({
   username: 'Чубайс',
   authorized: false,
 
-  login: () => set({ authorized: true }),
-  logout: () => set({ authorized: false }),
+  actions: {
+    login: () => set({ authorized: true }),
+    logout: () => set({ authorized: false }),
+  },
 }));

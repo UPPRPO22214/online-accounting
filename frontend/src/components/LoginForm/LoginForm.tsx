@@ -1,12 +1,14 @@
-import { useAuth } from '@/store/auth';
 import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 import type React from 'react';
 
+import { Button } from '@/components/Button';
+import { useAuth } from '@/state/auth';
+
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
-  const login = useAuth(state => state.login);
+  const login = useAuth((state) => state.actions.login);
 
   return (
     <div className={clsx('border p-2', className)}>
@@ -26,12 +28,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
           name="login-password"
           id="login-password"
         />
-        <button
-          className="p-1 transition-base bg-gray-200 hover:bg-gray-300 hover:cursor-pointer"
-          type="submit"
-        >
-          Войти
-        </button>
+        <Button className="hover:cursor-pointer">Войти</Button>
       </form>
     </div>
   );

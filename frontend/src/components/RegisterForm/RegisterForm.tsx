@@ -1,12 +1,13 @@
-import { useAuth } from '@/store/auth';
+import { useAuth } from '@/state/auth';
 import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 import type React from 'react';
+import { Button } from '@/components/Button';
 
 type RegisterFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
-  const login = useAuth(state => state.login);
+  const login = useAuth((state) => state.actions.login);
 
   return (
     <div className={clsx('border p-2', className)}>
@@ -33,12 +34,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
           name="reg-password2"
           id="reg-password2"
         />
-        <button
-          className="p-1 transition-base bg-gray-200 hover:bg-gray-300 hover:cursor-pointer"
-          type="submit"
-        >
-          Зарегистрироваться
-        </button>
+        <Button className="hover:cursor-pointer">Зарегистрироваться</Button>
       </form>
     </div>
   );

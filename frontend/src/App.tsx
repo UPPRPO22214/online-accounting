@@ -1,5 +1,6 @@
 import { Route, Switch } from 'wouter';
 import { MainPage, AccountPage } from '@/pages';
+import { FinDialog } from './components/FinDialog';
 
 export const App = () => {
   return (
@@ -17,6 +18,7 @@ export const App = () => {
         </Switch>
       </main>
       <footer></footer>
+      <FinDialog />
     </>
   );
 };

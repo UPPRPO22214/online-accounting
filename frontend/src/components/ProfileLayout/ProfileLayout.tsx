@@ -1,10 +1,11 @@
-import { useAuth } from '@/store/auth';
+import { useAuth } from '@/state/auth';
 import type React from 'react';
 import { Link } from 'wouter';
+import { Button } from '@/components/Button';
 
 export const ProfileLayout: React.FC = () => {
   const username = useAuth(state => state.username);
-  const logout = useAuth(state => state.logout);
+  const logout = useAuth(state => state.actions.logout);
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -33,12 +34,12 @@ export const ProfileLayout: React.FC = () => {
           <div className="p-3 border">Тестовый счёт 1</div>
         </Link>
       </div>
-      <button
-        className="p-1 px-3 transition-base bg-gray-200 hover:bg-gray-300 hover:cursor-pointer w-fit m-auto"
+      <Button
+        className="p-1 px-3 hover:cursor-pointer w-fit m-auto"
         onClick={() => logout()}
       >
         Выйти
-      </button>
+      </Button>
     </div>
   );
 };
