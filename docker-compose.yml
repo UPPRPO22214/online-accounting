@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+    postgres:
+        image: postgres
+        container_name: online-accounting-db 
+        restart: always
+        ports:
+            - 5432:5432
+        environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: qwerty
+        networks:
+            - new
+    redis:
+        image: redis
+        container_name: online-accounting-redis
+        ports:
+            - "6379:6379"
+        networks:
+            - new
+    auth-service:
+        build: 
+            context: ./backend/auth-service
+            dockerfile: Dockerfile
+        container_name: online-accounting-auth-service
+        ports:
+            - "50051:50051"
+        depends_on:
+            - postgres
+            - redis
+        networks:
+            - new
+    budget-service:
+        build: 
+            context: ./backend/budget-service
+            dockerfile: Dockerfile
+        container_name: online-accounting-budget-service
+        ports:
+            - "50052:50052"
+        depends_on:
+            - postgres
+            - redis
+        networks:
+            - new
+    api-gateway: 
+        build: 
+            context: ./backend/api-gateway
+            dockerfile: Dockerfile
+        container_name: online-accounting-api-gateway
+        ports:
+            - 8080:8080
+        depends_on:
+            - auth-service
+            - budget-service
+        networks:
+            - new
+    frontend:
+        build: 
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: frontend
+        depends_on:
+            - api-gateway
+        ports:
+            - "5173:5173"
+    networks:
+        - new
+
+networks:
+  new:
