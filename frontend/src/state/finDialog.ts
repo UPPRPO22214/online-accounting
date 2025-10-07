@@ -1,5 +1,5 @@
 import type { FinNote } from '@/pages/AccountPage';
-import { create } from 'zustand';
+import { createWrappedStore } from './misc';
 
 const NEW_NOTE: FinNote = {
   id: crypto.randomUUID(),
@@ -18,16 +18,16 @@ type FinDialogStoreType = {
   };
 };
 
-export const useFinDialog = create<FinDialogStoreType>((set) => ({
+export const useFinDialog = createWrappedStore<FinDialogStoreType>((mutate) => ({
   opened: false,
   note: NEW_NOTE,
 
   actions: {
-    open: (note) => {
-      set({ opened: true, note: note === 'new' ? NEW_NOTE : note });
-    },
-    close: () => {
-      set({ opened: false })
-    }
+    open: (note) => mutate((state) => {
+      state.opened = true
+      state.note = note === 'new' ? NEW_NOTE : note
+    }),
+      
+    close: () => mutate((state) => { state.opened = false })
   },
-}));
+}), { name: 'fin-dialog' });
