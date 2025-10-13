@@ -27,7 +27,6 @@ export const useFinDialog = createWrappedStore<FinDialogStoreType>((mutate) => (
       state.opened = true
       state.note = note === 'new' ? NEW_NOTE : note
     }),
-      
     close: () => mutate((state) => { state.opened = false })
   },
 }), { name: 'fin-dialog' });
