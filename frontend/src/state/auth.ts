@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { createWrappedStore } from './misc';
 
 type AuthStoreType = {
   username: string;
@@ -10,12 +10,12 @@ type AuthStoreType = {
   };
 };
 
-export const useAuth = create<AuthStoreType>((set) => ({
+export const useAuth = createWrappedStore<AuthStoreType>((mutate) => ({
   username: 'Чубайс',
   authorized: false,
 
   actions: {
-    login: () => set({ authorized: true }),
-    logout: () => set({ authorized: false }),
+    login: () => mutate((state) => { state.authorized = true }),
+    logout: () => mutate((state) => { state.authorized = false }),
   },
-}));
+}), { name: 'auth-store' });
