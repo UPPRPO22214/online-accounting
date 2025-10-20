@@ -2,19 +2,20 @@
 // versions:
 //   sqlc v1.30.0
 
-package database
+package query
 
 import (
+	"database/sql"
 	"time"
 )
 
 type RefreshToken struct {
-	ID          int32
 	UserID      int32
 	TokenHash   string
 	IsRefreshed bool
 	CreatedAt   time.Time
 	ExpiresAt   time.Time
+	RevokedAt   sql.NullTime
 }
 
 type User struct {
