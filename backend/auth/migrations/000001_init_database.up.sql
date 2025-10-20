@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id               INT PRIMARY KEY AUTO_INCREMENT,
     email            VARCHAR(64) UNIQUE NOT NULL,
-    password_hash    VARCHAR(32) NOT NULL,
-    nickname         VARCHAR(128) NOT NULL
+    password_hash    VARCHAR(32) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (

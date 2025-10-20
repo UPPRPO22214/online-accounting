@@ -3,7 +3,7 @@ networks:
 
 services:
   db:
-    image: mysql:8.0
+    image: mysql:8.0-bookworm
     container_name: mysql-db
     env_file: .env
     ports:
@@ -36,7 +36,7 @@ services:
         condition: service_healthy
     networks:
       - auth
-    restart: "no"  # хотя по-хорошему при неудачном срабатывании должен запускаться ещё раз
+    restart: no  # хотя по-хорошему при неудачном срабатывании должен запускаться ещё раз
 
 volumes:
   mysql-data:

@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    queries: "query.sql"
+    schema: "migrations/000001_init_database.up.sql"
+    gen:
+      go:
+        sql_package: "database/sql"
+        package: "database"
+        out: "internal/database"
