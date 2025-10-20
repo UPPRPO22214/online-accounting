@@ -28,7 +28,7 @@ services:
     command: [
       "-path", "/migrations",
       "-database",
-      "mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?multiStatements=true&parseTime=true&tls=${DB_TLS}",
+      "mysql://${DB_USER}:${DB_PASSWORD}@tcp(db:3306)/${DB_NAME}?multiStatements=true&parseTime=true&tls=${DB_TLS}",
       "up"
     ]
     depends_on:
@@ -36,7 +36,7 @@ services:
         condition: service_healthy
     networks:
       - auth
-    restart: no  # хотя по-хорошему при неудачном срабатывании должен запускаться ещё раз
+    restart: on-failure:5  # Retry до 5 раз при ошибке
 
 volumes:
   mysql-data:
