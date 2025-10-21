@@ -2,8 +2,8 @@ import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 import type React from 'react';
 
-import { useAuthStore } from '../store';
 import { Button } from '@/shared/ui';
+import { useAuthStore } from '@/entities/User';
 
 type RegisterFormProps = HTMLAttributes<HTMLDivElement>;
 

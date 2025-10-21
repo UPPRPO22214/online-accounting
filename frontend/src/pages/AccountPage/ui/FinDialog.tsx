@@ -2,7 +2,7 @@ import type React from 'react';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import clsx from 'clsx';
 
-import { useFinDialogStore } from '../store';
+import { useFinDialogStore } from '../model';
 import { Button } from '@/shared/ui';
 
 export const FinDialog: React.FC = () => {

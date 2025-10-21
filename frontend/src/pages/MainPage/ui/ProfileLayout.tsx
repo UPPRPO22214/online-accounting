@@ -1,8 +1,8 @@
 import type React from 'react';
 import { Link } from 'wouter';
 
-import { useAuthStore } from '../store';
 import { Button } from '@/shared/ui';
+import { useAuthStore } from '@/entities/User';
 
 export const ProfileLayout: React.FC = () => {
   const username = useAuthStore((state) => state.username);

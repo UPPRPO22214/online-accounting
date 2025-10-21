@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 
-import { useFinDialogStore } from '../store';
+import { useFinDialogStore } from '../model';
 import { Button } from '@/shared/ui';
 
 type FinTableProps = HTMLAttributes<HTMLDivElement> & {

@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'react';
 import type React from 'react';
 
 import { Button } from '@/shared/ui';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '@/entities/User';
 
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
