@@ -1,0 +1,1 @@
+export { MainSwitch } from './MainSwitch';
