@@ -26,5 +26,5 @@ func main() {
 
 	// TODO: Transport, proto files for gRPC
 
-	// TODO: graceful shutdown
+	// TODO: Graceful shutdown
 }

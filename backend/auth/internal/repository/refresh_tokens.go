@@ -30,7 +30,7 @@ func (r *RefreshTokenRepository) GenerateToken(ctx context.Context, params *mode
 	})
 }
 
-func (r *RefreshTokenRepository) GetToken(ctx context.Context, userID int, tokenHash string) (*query.RefreshToken, error) {
+func (r *RefreshTokenRepository) GetToken(ctx context.Context, userID int, tokenHash string) (*models.RefreshToken, error) {
 	token, err := r.queries.GetRefreshToken(ctx, query.GetRefreshTokenParams{
 		UserID:    int32(userID),
 		TokenHash: tokenHash,
@@ -41,17 +41,21 @@ func (r *RefreshTokenRepository) GetToken(ctx context.Context, userID int, token
 		}
 		return nil, err
 	}
-	return &query.RefreshToken{
-		UserID:      token.UserID,
+
+	refreshToken := &models.RefreshToken{
+		UserID:      int(token.UserID),
 		TokenHash:   token.TokenHash,
 		IsRefreshed: token.IsRefreshed,
 		CreatedAt:   token.CreatedAt,
 		ExpiresAt:   token.ExpiresAt,
-		RevokedAt:   token.RevokedAt, // sql.NullTime из модели sqlc
-	}, nil
+	}
+	if token.RevokedAt.Valid {
+		refreshToken.RevokedAt = &token.RevokedAt.Time
+	}
+	return refreshToken, nil
 }
 
-// Возвращает true, если токен был успешно использован (RowsAffected > 0)
+// Возвращает nil, если токен был успешно использован (RowsAffected > 0)
 func (r *RefreshTokenRepository) UseValidToken(ctx context.Context, userID int, tokenHash string) error {
 	result, err := r.queries.UseValidRefreshToken(ctx, query.UseValidRefreshTokenParams{
 		UserID:    int32(userID),

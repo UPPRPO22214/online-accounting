@@ -21,7 +21,7 @@ func New(cfg *config.Config) (*Database, error) {
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBTLS,
 	)
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't init the database: %w", err)
 	}

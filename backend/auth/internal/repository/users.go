@@ -22,7 +22,7 @@ func (r *UserRepository) WithTx(tx *sql.Tx) UserRepository {
 	return UserRepository{queries: r.queries.WithTx(tx)}
 }
 
-func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*query.User, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -30,8 +30,8 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*que
 		}
 		return nil, err
 	}
-	return &query.User{
-		ID:           user.ID,
+	return &models.User{
+		ID:           int(user.ID),
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
 	}, nil
