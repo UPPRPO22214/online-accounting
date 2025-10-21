@@ -7,5 +7,5 @@ export type Slice<T> = (
   mutate: Mutator<T>,
   set: StoreApi<T>['setState'],
   get: StoreApi<T>['getState'],
-  api: StoreApi<T>
+  api: StoreApi<T>,
 ) => T;
