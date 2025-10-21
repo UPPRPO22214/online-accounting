@@ -10,8 +10,8 @@ FROM users
 WHERE id = ?;
 
 -- name: CreateUser :execresult
-INSERT INTO users (id, email, password_hash)
-VALUES (?, ?, ?);
+INSERT INTO users (email, password_hash)
+VALUES (?, ?);
 
 -- name: UpdateUserPassword :execresult
 UPDATE users

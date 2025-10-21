@@ -25,18 +25,17 @@ func (q *Queries) CheckUserByID(ctx context.Context, id int32) (bool, error) {
 }
 
 const createUser = `-- name: CreateUser :execresult
-INSERT INTO users (id, email, password_hash)
-VALUES (?, ?, ?)
+INSERT INTO users (email, password_hash)
+VALUES (?, ?)
 `
 
 type CreateUserParams struct {
-	ID           int32
 	Email        string
 	PasswordHash string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createUser, arg.ID, arg.Email, arg.PasswordHash)
+	return q.db.ExecContext(ctx, createUser, arg.Email, arg.PasswordHash)
 }
 
 const generateRefreshToken = `-- name: GenerateRefreshToken :exec
