@@ -1,9 +1,9 @@
-import type React from "react";
+import type React from 'react';
 
-import { LoginForm } from "./LoginForm";
-import { ProfileLayout } from "./ProfileLayout";
-import { RegisterForm } from "./RegisterForm";
-import { useAuthStore } from "@/entities/User";
+import { LoginForm } from './LoginForm';
+import { ProfileLayout } from './ProfileLayout';
+import { RegisterForm } from './RegisterForm';
+import { useAuthStore } from '@/entities/User';
 
 export const MainPage: React.FC = () => {
   const authorized = useAuthStore((state) => state.authorized);

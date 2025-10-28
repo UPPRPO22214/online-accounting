@@ -13,3 +13,9 @@ bun run dev
 ```bash
 bun run build
 ```
+
+## Contribution
+Для коммита писать:
+```bash
+bun run commit <commit_flags>
+```

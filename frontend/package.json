@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "prettier": "prettier",
-    "preview": "vite preview"
+    "lint-check": "eslint .",
+    "lint-fix": "eslint --fix .",
+    "prettier": "prettier -w ./src",
+    "preview": "vite preview",
+    "all-checks": "bun run lint-check && bun run build && bun run prettier",
+    "commit": "bun run all-checks && git add -A && git commit"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
