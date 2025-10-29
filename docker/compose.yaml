@@ -13,8 +13,8 @@ services:
     networks:
       - auth
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  # простой ping без пароля
-      interval: 30s  # проверка каждые 30 секунд
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  
+      interval: 30s  
       timeout: 10s
       retries: 3
       start_period: 40s
@@ -24,7 +24,7 @@ services:
     image: migrate/migrate:latest
     container_name: migrate-db
     volumes:
-      - ./migrations:/migrations
+      - ../backend/auth/migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database",
@@ -36,7 +36,28 @@ services:
         condition: service_healthy
     networks:
       - auth
-    restart: on-failure:5  # Retry до 5 раз при ошибке
+    restart: on-failure:5 
+
+  auth:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.auth.dev
+    image: accounting-auth
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - migrate
+    networks:
+      - auth
+  
+  frontend:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.front.dev
+    image: accounting-front
+    ports:
+      - "5173:5173"
 
 volumes:
   mysql-data:
