@@ -6,6 +6,8 @@ import { Button } from '@/shared/ui';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { createAccount } from '@/entities/Account';
+import { useAuthStore } from '@/entities/User';
 
 type AccountFormProps = HTMLAttributes<HTMLDivElement>;
 
@@ -19,6 +21,8 @@ const accountZodSchema = z.object({
 type AccountCreate = z.infer<typeof accountZodSchema>;
 
 export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
+  const user = useAuthStore((state) => state.user);
+  
   const { register, handleSubmit, formState } = useForm<AccountCreate>({
     resolver: zodResolver(accountZodSchema),
   });
@@ -27,7 +31,10 @@ export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
     <div className={clsx('border p-2', className)}>
       <form
         onSubmit={handleSubmit((value) => {
-          console.log(value);
+          createAccount(user.id, {
+            ...value,
+            id: crypto.randomUUID(),
+          })
         })}
         className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2"
       >

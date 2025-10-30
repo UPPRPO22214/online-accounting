@@ -1,20 +1,23 @@
 import { createWrappedStore } from '@/shared/store';
+import type { User } from '../types';
 
 type AuthStoreType = {
-  username: string;
+  user: User;
   authorized: boolean;
 
-  actions: {
-    login: () => void;
-    logout: () => void;
-  };
+  login: () => void;
+  logout: () => void;
 };
 
-export const useAuthStore = createWrappedStore<AuthStoreType>((mutate) => ({
-  username: 'Чубайс',
-  authorized: false,
+export const useAuthStore = createWrappedStore<AuthStoreType>(
+  (mutate) => ({
+    user: {
+      id: 1,
+      email: 'some@mail.ru',
+      nickname: 'Чубайс'
+    },
+    authorized: false,
 
-  actions: {
     login: () =>
       mutate((state) => {
         state.authorized = true;
@@ -23,5 +26,6 @@ export const useAuthStore = createWrappedStore<AuthStoreType>((mutate) => ({
       mutate((state) => {
         state.authorized = false;
       }),
-  },
-}));
+  }),
+  { name: 'auth-store' },
+);

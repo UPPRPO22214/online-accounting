@@ -8,7 +8,7 @@ import { useAuthStore } from '@/entities/User';
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
-  const login = useAuthStore((state) => state.actions.login);
+  const login = useAuthStore((state) => state.login);
 
   return (
     <div className={clsx('border p-2', className)}>
