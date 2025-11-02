@@ -14,7 +14,7 @@ export const useAuthStore = createWrappedStore<AuthStoreType>(
     user: {
       id: 1,
       email: 'some@mail.ru',
-      nickname: 'Чубайс'
+      nickname: 'Чубайс',
     },
     authorized: false,
 

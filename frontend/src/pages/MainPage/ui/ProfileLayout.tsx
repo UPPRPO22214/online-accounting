@@ -19,7 +19,9 @@ export const ProfileLayout: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <h2 className="text-2xl text-center">Привет, {user.nickname} ({user.email})</h2>
+      <h2 className="text-2xl text-center">
+        Привет, {user.nickname} ({user.email})
+      </h2>
       <h3 className="text-lg mt-4">Мои счета</h3>
       <AccountForm />
       <div className="flex justify-around gap-4">

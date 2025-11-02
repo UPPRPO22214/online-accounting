@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 import type React from 'react';
 
-import { Button } from '@/shared/ui';
+import { Button, ErrorMessage } from '@/shared/ui';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,7 +22,7 @@ type AccountCreate = z.infer<typeof accountZodSchema>;
 
 export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
   const user = useAuthStore((state) => state.user);
-  
+
   const { register, handleSubmit, formState } = useForm<AccountCreate>({
     resolver: zodResolver(accountZodSchema),
   });
@@ -34,7 +34,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
           createAccount(user.id, {
             ...value,
             id: crypto.randomUUID(),
-          })
+          });
         })}
         className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2"
       >
@@ -43,12 +43,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
           placeholder="Название счёта"
           {...register('title')}
         />
-        <Button className="hover:cursor-pointer">Создать счёз</Button>
-        {formState.errors['title'] && (
-          <span className="text-orange-800 md:col-span-5">
-            {formState.errors['title'].message}
-          </span>
-        )}
+        <Button className="hover:cursor-pointer">Создать счёт</Button>
+        <ErrorMessage
+          className="md:col-span-5"
+          message={
+            formState.errors.title?.message || formState.errors.root?.message
+          }
+        />
       </form>
     </div>
   );

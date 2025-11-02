@@ -3,4 +3,4 @@ export type Operation = {
   date: Date;
   amount: number;
   description: number;
-}
+};
