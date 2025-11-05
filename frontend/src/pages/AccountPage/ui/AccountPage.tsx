@@ -4,6 +4,9 @@ import { Link, useParams } from 'wouter';
 
 import { FinTable } from './FinTable';
 import { FinDialog } from './FinDialog';
+// import { useAuthStore, type User } from '@/entities/User';
+// import { getAccount, type Account } from '@/entities/Account';
+// import type { Operation } from '@/entities/Operation';
 
 export type FinNote = {
   id: string;
@@ -48,8 +51,15 @@ export const AccountPage: React.FC = () => {
   const [account, setAccount] = useState<Account>();
   const [notes, setNotes] = useState<FinNote[]>([]);
 
+  // TODO: задел на будущее
+  // const user = useAuthStore((state) => state.user);
+  // const [members, setMembers] = useState<User[]>([]);
+  // const [operations, setOperations] = useState<Operation[]>([]);
+
   useEffect(() => {
-    const account = ACCOUNT_MOCKS.find((account) => account.id === accountId);
+    const account =
+      ACCOUNT_MOCKS.find((account) => account.id === accountId) ??
+      ACCOUNT_MOCKS[0];
     if (!account) return;
     setAccount(account);
     setNotes(
