@@ -2,13 +2,13 @@ import type React from 'react';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import clsx from 'clsx';
 
-import { useFinDialogStore } from '../model';
+import { useOperationDialogStore } from '../model';
 import { Button } from '@/shared/ui';
 
-export const FinDialog: React.FC = () => {
-  const note = useFinDialogStore((state) => state.note);
-  const opened = useFinDialogStore((state) => state.opened);
-  const close = useFinDialogStore((state) => state.actions.close);
+export const OperationDialogWindow: React.FC = () => {
+  const operation = useOperationDialogStore((state) => state.operation);
+  const opened = useOperationDialogStore((state) => state.opened);
+  const close = useOperationDialogStore((state) => state.close);
 
   return (
     <Dialog
@@ -33,22 +33,22 @@ export const FinDialog: React.FC = () => {
           )}
         >
           <DialogTitle as="h3" className="text-lg font-medium">
-            {note.name}
+            {operation.description}
           </DialogTitle>
           <div className="mt-2 text-lg">
-            Дата: {note.date.toLocaleDateString()}
+            Дата: {operation.date.toLocaleDateString()}
           </div>
           <div className="mt-2 text-lg">
             Сумма:{' '}
             <span
               className={clsx(
                 'font-mono p-1',
-                note.value > 0 && 'bg-green-300',
-                note.value === 0 && 'bg-yellow-200',
-                note.value < 0 && 'bg-red-300',
+                operation.amount > 0 && 'bg-green-300',
+                operation.amount === 0 && 'bg-yellow-200',
+                operation.amount < 0 && 'bg-red-300',
               )}
             >
-              {note.value}
+              {operation.amount}
             </span>
           </div>
           <div className="mt-4 flex justify-around">

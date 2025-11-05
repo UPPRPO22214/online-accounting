@@ -6,6 +6,12 @@ export const getAccount = (userId: number, accountId: string) => {
   return accounts.find((account) => account.id === accountId);
 };
 
+// TODO: getAccountMembers
+
+// TODO: addAccountMember
+
+// TODO: removeAccountMember
+
 export const getUserAccounts = (ownerId: number) => {
   return getLocalStorageItem<Account[]>(`accounts-${ownerId}`, []);
 };

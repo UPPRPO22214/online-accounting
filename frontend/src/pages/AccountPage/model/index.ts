@@ -1,1 +1,1 @@
-export { useFinDialogStore } from './finDialog';
+export { useOperationDialogStore } from './operationDialogStore';
