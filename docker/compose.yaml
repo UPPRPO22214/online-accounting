@@ -17,7 +17,7 @@ services:
       interval: 30s  
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 80s
     restart: always
 
   migrate:
@@ -47,7 +47,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - migrate
+      db: 
+        condition: service_healthy
+      migrate: 
+        condition: service_completed_successfully
     networks:
       - auth
   
