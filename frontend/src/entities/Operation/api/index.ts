@@ -18,6 +18,14 @@ export const createOperation = (accountId: string, operation: Operation) => {
   ])
 };
 
-// TODO: edit operation
+export const editOperation = (operation: Operation) => {
+  saveLocalStorageItem<Operation>(`operation-${operation.id}`, operation);
+};
 
-// TODO: delete operation
+export const deleteOperation = (operationId: string, accountId: string) => {
+  localStorage.removeItem(`operation-${operationId}`);
+  const operations = getAccountOperations(accountId);
+  saveLocalStorageItem<string[]>(`account-${accountId}-operations`, 
+    operations.filter(otherId => operationId !== otherId)
+  )
+}

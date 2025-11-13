@@ -35,7 +35,7 @@ export const AccountPage: React.FC = () => {
       <h1 className="text-center text-2xl m-10">Счёт {account.title}</h1>
       <Link href="/">На главную</Link>
       <div className="flex justify-start items-center gap-2 text-xl mb-6">
-        <h2 className="">{account.id}</h2>
+        <h2 className="">{user.nickname}</h2>
         <span>+</span>
         <ul className="text-lg flex justify-start gap-2">
           {members.map((member) => (

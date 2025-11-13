@@ -4,7 +4,7 @@ import type React from 'react';
 
 import { useOperationDialogStore } from '../model';
 import { Button } from '@/shared/ui';
-import { getAccountOperations } from '@/entities/Operation';
+import { getAccountOperations, getOperation } from '@/entities/Operation';
 import { OperationTableRow } from './OperationTableRow';
 
 type OperationsTableProps = HTMLAttributes<HTMLDivElement> & {
@@ -16,12 +16,20 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
   ...props
 }) => {
   const [result, setResult] = useState<number>(0);
-  const openOperationDialog = useOperationDialogStore((state) => state.open);
+  const openNewOpeationDialog = useOperationDialogStore((state) => state.openNew);
   const [operationIds, setOperationIds] = useState<string[]>([]);
 
   useEffect(() => {
     setOperationIds(getAccountOperations(accountId));
   }, [accountId]);
+
+  useEffect(() => {
+    for (const id of operationIds) {
+      const amount = getOperation(id)?.amount;
+      if (!amount) continue;
+      setResult((value) => value + amount);
+    }
+  }, [operationIds])
 
   return (
     <div {...props}>
@@ -70,7 +78,7 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
         <Button
           className="cursor-pointer text-xl font-bold border border-t-0"
           variant="white"
-          onClick={() => openOperationDialog('new')}
+          onClick={openNewOpeationDialog}
         >
           +
         </Button>
