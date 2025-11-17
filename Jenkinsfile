@@ -10,10 +10,10 @@ pipeline {
                             image 'golang:1.24'
                             args '-v $PWD/backend/auth:/app -w /app' 
                         }
+                    }
 
-                        steps {
-                            sh 'go build -o main cmd/service/main.go'
-                        }
+                    steps {
+                        sh 'go build -o main cmd/service/main.go'
                     }
                 }
 
@@ -23,10 +23,10 @@ pipeline {
                             image 'oven/bun:1'
                             args '-v $PWD/frontend:/app -w /app'
                         }
+                    }
 
-                        steps {
-                            sh 'bun run build'
-                        }
+                    steps {
+                        sh 'bun run build'
                     }
                 }
             }
