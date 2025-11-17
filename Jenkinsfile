@@ -23,7 +23,7 @@ pipeline {
                 stage('Build frontend') {
                     agent {
                         docker {
-                            image 'oven/bun:latest'
+                            image 'oven/bun:1'
                         }
                     }
 
