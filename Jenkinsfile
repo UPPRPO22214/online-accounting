@@ -28,7 +28,9 @@ pipeline {
                     }
 
                     steps {
-                        sh 'cd frontend && bun run build'
+                        sh 'cd frontend'
+                        sh 'bun install --frozen-lockfile'
+                        sh 'bun run dev'
                     }
                 }
             }
