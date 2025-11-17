@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        GOCACHE = '/tmp/go-build-cache'
+    }
+
     stages {
         stage('Build') {
             parallel {
@@ -19,7 +23,7 @@ pipeline {
                 stage('Build frontend') {
                     agent {
                         docker {
-                            image 'oven/bun:1'
+                            image 'oven/bun:latest'
                         }
                     }
 
