@@ -8,12 +8,11 @@ pipeline {
                     agent {
                         docker {
                             image 'golang:1.24'
-                            args '-v $PWD/backend/auth:/app -w /app' 
                         }
                     }
 
                     steps {
-                        sh 'go build -o main cmd/service/main.go'
+                        sh 'cd backend/auth && go build -o main cmd/service/main.go'
                     }
                 }
 
@@ -21,12 +20,11 @@ pipeline {
                     agent {
                         docker {
                             image 'oven/bun:1'
-                            args '-v $PWD/frontend:/app -w /app'
                         }
                     }
 
                     steps {
-                        sh 'bun run build'
+                        sh 'cd frontend && bun run build'
                     }
                 }
             }
