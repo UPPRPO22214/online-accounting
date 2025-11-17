@@ -31,9 +31,5 @@ pipeline {
                 }
             }
         }
-
-        stage('Test') {
-            echo 'Здесь будут тесты'
-        }
     }
 }
