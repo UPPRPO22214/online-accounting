@@ -1,45 +1,42 @@
 import type { Operation } from '@/entities/Operation';
 import { createWrappedStore } from '@/shared/store';
 
-const NEW_OPERATION: Operation = {
-  id: crypto.randomUUID(),
+const NEW_OPERATION: Omit<Operation, 'id'> = {
   date: new Date(),
   amount: 0,
   description: '',
 };
 
-type OperationDialogMode = 'show' | 'edit';
+type OpeartionFormMode = 'show' | 'edit' | 'create';
 
 type FinDialogStoreType = {
   opened: boolean;
-  isNew: boolean;
-  mode: OperationDialogMode;
+  mode: OpeartionFormMode;
   operation: Operation;
 
   open: (operation: Operation) => void;
   openNew: () => void;
   close: () => void;
-  setMode: (mode: OperationDialogMode) => void;
+  setMode: (mode: OpeartionFormMode) => void;
 };
 
 export const useOperationDialogStore = createWrappedStore<FinDialogStoreType>(
   (mutate) => ({
     opened: false,
-    isNew: true,
-    mode: 'show',
-    operation: NEW_OPERATION,
+    mode: 'create',
+    operation: { ...NEW_OPERATION, id: crypto.randomUUID() },
 
     open: (operation) =>
       mutate((state) => {
         state.opened = true;
-        state.isNew = false;
+        state.mode = 'show';
         state.operation = operation;
       }),
     openNew: () =>
       mutate((state) => {
         state.opened = true;
-        state.isNew = true;
-        state.operation = { ...NEW_OPERATION };
+        state.mode = 'create';
+        state.operation = { ...NEW_OPERATION, id: crypto.randomUUID() };
       }),
     close: () =>
       mutate((state) => {
