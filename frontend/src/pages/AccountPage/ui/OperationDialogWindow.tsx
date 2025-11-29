@@ -20,7 +20,6 @@ import { Button, ErrorMessage } from '@/shared/ui';
 import { createOperation, deleteOperation } from '@/entities/Operation/api';
 import { operationSchema, type OperationFormType } from '../types';
 import { periods, type Operation } from '@/entities/Operation/types';
-import { isoDatetimeToDate } from '@/shared/types';
 
 export const OperationDialogWindow: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -68,7 +67,7 @@ export const OperationDialogWindow: React.FC = () => {
                 {operation.description}
               </DialogTitle>
               <div className="mt-2 text-lg">
-                Дата: {operation.date.toLocaleDateString()}
+                Дата: {operation.date}
               </div>
               <div className="mt-2 text-lg">
                 Сумма:{' '}
@@ -102,16 +101,22 @@ export const OperationDialogWindow: React.FC = () => {
             <form
               className="text-lg grid grid-cols-1 gap-2"
               onSubmit={handleSubmit((state) => {
+                console.log(state);
                 const operation: Operation = {
-                  description: state.desc
-                  date: isoDatetimeToDate.decode(state.date),
+                  amount: state.amount,
+                  description: state.description,
+                  date: state.date,
                   id: crypto.randomUUID(),
-                  periodic: state.periodic && {
-                    period: state.periodic.period,
-                    started_at: isoDatetimeToDate.decode(state.periodic.started_at),
-                    ended_at: state.periodic.ended_at && state.periodic.ended_at !== '' ? isoDatetimeToDate.decode(state.periodic.ended_at) : undefined
-                  }
-                }
+                  periodic: state.period && {
+                    period: state.period,
+                    started_at: state.date,
+                    ended_at:
+                      state.ended_at && state.ended_at !== ''
+                        ? state.date
+                        : undefined,
+                  },
+                };
+                console.log(operation);
                 createOperation(accountId, operation);
               })}
             >
@@ -151,17 +156,9 @@ export const OperationDialogWindow: React.FC = () => {
               </div>
               <Transition show={isPeriodic}>
                 <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
-                  <input
-                    className="p-1 bg-gray-100"
-                    type="date"
-                    {...register('periodic.started_at')}
-                  />
-                  <ErrorMessage
-                    message={formState.errors.periodic?.started_at?.message}
-                  />
                   <Field>
                     <Label>Период</Label>
-                    <Select {...register('periodic.period')}>
+                    <Select {...register('period')}>
                       {periods.map((period) => (
                         <option value={period} key={period}>
                           {period}
@@ -169,18 +166,13 @@ export const OperationDialogWindow: React.FC = () => {
                       ))}
                     </Select>
                   </Field>
-                  <ErrorMessage
-                    message={formState.errors.periodic?.period?.message}
-                  />
+                  <ErrorMessage message={formState.errors.period?.message} />
                   <input
                     className="p-1 bg-gray-100"
                     type="date"
-                    {...register('periodic.ended_at')}
+                    {...register('ended_at')}
                   />
-                  <ErrorMessage
-                    message={formState.errors.periodic?.ended_at?.message}
-                  />
-                  <ErrorMessage message={formState.errors.periodic?.message} />
+                  <ErrorMessage message={formState.errors.ended_at?.message} />
                 </div>
               </Transition>
               <div className="flex justify-around">

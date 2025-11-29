@@ -11,13 +11,13 @@ export const periods = Object.keys(periodsRecord) as PeriodData['period'][];
 
 export type PeriodData = {
   period: Period;
-  started_at: Date;
-  ended_at?: Date;
+  started_at: string;
+  ended_at?: string;
 }
 
 export type Operation = {
   id: string;
-  date: Date;
+  date: string;
   amount: number;
   description: string;
   periodic?: PeriodData;
