@@ -17,7 +17,11 @@ import { useForm, useWatch } from 'react-hook-form';
 
 import { useOperationDialogStore } from '../model';
 import { Button, ErrorMessage } from '@/shared/ui';
-import { createOperation, deleteOperation, editOperation } from '@/entities/Operation/api';
+import {
+  createOperation,
+  deleteOperation,
+  editOperation,
+} from '@/entities/Operation/api';
 import { operationSchema, type OperationFormType } from '../types';
 import { periods, type Operation } from '@/entities/Operation/types';
 
@@ -122,14 +126,17 @@ export const OperationDialogWindow: React.FC = () => {
                   description: state.description,
                   date: state.date,
                   id: mode === 'create' ? crypto.randomUUID() : operation.id,
-                  periodic: isPeriodic && state.period ? {
-                    period: state.period,
-                    started_at: state.date,
-                    ended_at:
-                      state.ended_at && state.ended_at !== ''
-                        ? state.ended_at
-                        : undefined,
-                  } : undefined,
+                  periodic:
+                    isPeriodic && state.period
+                      ? {
+                          period: state.period,
+                          started_at: state.date,
+                          ended_at:
+                            state.ended_at && state.ended_at !== ''
+                              ? state.ended_at
+                              : undefined,
+                        }
+                      : undefined,
                 };
                 if (mode === 'create') {
                   createOperation(accountId, newOperation);

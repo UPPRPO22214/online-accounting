@@ -40,11 +40,7 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
         <>
           <span className="p-1">{operation.date}</span>
           <span className="p-1 border-x">{operation.description}</span>
-          <span
-            className={clsx(
-              'font-mono p-1', amountColor,
-            )}
-          >
+          <span className={clsx('font-mono p-1', amountColor)}>
             {operation.amount}
           </span>
         </>

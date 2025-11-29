@@ -16,7 +16,9 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
   ...props
 }) => {
   const [result, setResult] = useState<number>(0);
-  const openNewOpeationDialog = useOperationDialogStore((state) => state.openNew);
+  const openNewOpeationDialog = useOperationDialogStore(
+    (state) => state.openNew,
+  );
   const [operationIds, setOperationIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
       if (!amount) continue;
       setResult((value) => value + amount);
     }
-  }, [operationIds])
+  }, [operationIds]);
 
   return (
     <div {...props}>

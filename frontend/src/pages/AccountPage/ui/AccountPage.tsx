@@ -4,7 +4,8 @@ import { Link, useParams } from 'wouter';
 
 import { OperationsTable } from './OperationsTable';
 import { OperationDialogWindow } from './OperationDialogWindow';
-import { useAuthStore, type User } from '@/entities/User';
+// import { useAuthStore, type User } from '@/entities/User';
+import { useAuthStore } from '@/entities/User';
 import { getAccount, type Account } from '@/entities/Account';
 
 export const AccountPage: React.FC = () => {
@@ -12,12 +13,11 @@ export const AccountPage: React.FC = () => {
   const [account, setAccount] = useState<Account>();
 
   const user = useAuthStore((state) => state.user);
-  const [members, setMembers] = useState<User[]>([]);
+  // const [members, setMembers] = useState<User[]>([]);
 
   useEffect(() => {
     const account = getAccount(user.id, accountId);
     setAccount(account);
-
   }, [user, accountId]);
 
   if (!account)
@@ -37,11 +37,11 @@ export const AccountPage: React.FC = () => {
       <div className="flex justify-start items-center gap-2 text-xl mb-6">
         <h2 className="">{user.nickname}</h2>
         <span>+</span>
-        <ul className="text-lg flex justify-start gap-2">
+        {/* <ul className="text-lg flex justify-start gap-2">
           {members.map((member) => (
             <li key={member.id}>{member.nickname}</li>
           ))}
-        </ul>
+        </ul> */}
       </div>
       <OperationsTable accountId={accountId} />
       <OperationDialogWindow />
