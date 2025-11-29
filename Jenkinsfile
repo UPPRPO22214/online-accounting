@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        GOCACHE = '/tmp/go-build-cache'
+    }
+
     stages {
         stage('Build') {
             parallel {
@@ -8,12 +12,11 @@ pipeline {
                     agent {
                         docker {
                             image 'golang:1.24'
-                            args '-v $PWD/backend/auth:/app -w /app' 
                         }
+                    }
 
-                        steps {
-                            sh 'go build -o main cmd/service/main.go'
-                        }
+                    steps {
+                        sh 'cd backend/auth && go build -o main cmd/service/main.go'
                     }
                 }
 
@@ -21,19 +24,15 @@ pipeline {
                     agent {
                         docker {
                             image 'oven/bun:1'
-                            args '-v $PWD/frontend:/app -w /app'
                         }
+                    }
 
-                        steps {
-                            sh 'bun run build'
-                        }
+                    steps {
+                        sh 'cd frontend && bun install --frozen-lockfile'
+                        sh 'cd frontend && bun run build'
                     }
                 }
             }
         }
-
-        stage('Test') {
-            echo 'Здесь будут тесты'
-        }
     }
-}
+}  
