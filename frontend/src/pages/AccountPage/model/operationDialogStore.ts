@@ -2,7 +2,7 @@ import type { Operation } from '@/entities/Operation';
 import { createWrappedStore } from '@/shared/store';
 
 const NEW_OPERATION: Omit<Operation, 'id'> = {
-  date: new Date(),
+  date: new Date().toDateString(),
   amount: 0,
   description: '',
 };

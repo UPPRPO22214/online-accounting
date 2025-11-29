@@ -12,12 +12,12 @@ import { Checkbox } from '@headlessui/react';
 import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams } from 'wouter';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { useOperationDialogStore } from '../model';
 import { Button, ErrorMessage } from '@/shared/ui';
-import { createOperation, deleteOperation } from '@/entities/Operation/api';
+import { createOperation, deleteOperation, editOperation } from '@/entities/Operation/api';
 import { operationSchema, type OperationFormType } from '../types';
 import { periods, type Operation } from '@/entities/Operation/types';
 
@@ -29,10 +29,24 @@ export const OperationDialogWindow: React.FC = () => {
   const opened = useOperationDialogStore((state) => state.opened);
   const close = useOperationDialogStore((state) => state.close);
 
+  const [defaultOperation, setDefaultOperation] = useState<OperationFormType>();
   const { register, formState, handleSubmit, control } =
     useForm<OperationFormType>({
       resolver: zodResolver(operationSchema),
+      values: defaultOperation,
     });
+  useEffect(() => {
+    const defaultOpeationValues: OperationFormType = {
+      description: operation.description,
+      amount: operation.amount,
+      date: operation.date,
+      period: operation.periodic?.period,
+      ended_at: operation.periodic?.ended_at,
+    };
+    setIsPeriodic(!!operation.periodic);
+    setDefaultOperation(defaultOpeationValues);
+  }, [operation]);
+
   const amount = useWatch({
     name: 'amount',
     control,
@@ -66,9 +80,7 @@ export const OperationDialogWindow: React.FC = () => {
               <DialogTitle as="h3" className="text-lg font-medium">
                 {operation.description}
               </DialogTitle>
-              <div className="mt-2 text-lg">
-                Дата: {operation.date}
-              </div>
+              <div className="mt-2 text-lg">Дата: {operation.date}</div>
               <div className="mt-2 text-lg">
                 Сумма:{' '}
                 <span
@@ -91,7 +103,11 @@ export const OperationDialogWindow: React.FC = () => {
                 </Button>
                 <Button
                   className="px-2"
-                  onClick={() => deleteOperation(operation.id, accountId)}
+                  onClick={() => {
+                    deleteOperation(operation.id, accountId);
+                    close();
+                    location.reload();
+                  }}
                 >
                   Удалить
                 </Button>
@@ -101,23 +117,27 @@ export const OperationDialogWindow: React.FC = () => {
             <form
               className="text-lg grid grid-cols-1 gap-2"
               onSubmit={handleSubmit((state) => {
-                console.log(state);
-                const operation: Operation = {
+                const newOperation: Operation = {
                   amount: state.amount,
                   description: state.description,
                   date: state.date,
-                  id: crypto.randomUUID(),
-                  periodic: state.period && {
+                  id: mode === 'create' ? crypto.randomUUID() : operation.id,
+                  periodic: isPeriodic && state.period ? {
                     period: state.period,
                     started_at: state.date,
                     ended_at:
                       state.ended_at && state.ended_at !== ''
-                        ? state.date
+                        ? state.ended_at
                         : undefined,
-                  },
+                  } : undefined,
                 };
-                console.log(operation);
-                createOperation(accountId, operation);
+                if (mode === 'create') {
+                  createOperation(accountId, newOperation);
+                } else {
+                  editOperation(newOperation);
+                }
+                close();
+                location.reload();
               })}
             >
               <input
