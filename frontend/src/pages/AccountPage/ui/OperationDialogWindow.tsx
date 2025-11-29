@@ -23,7 +23,7 @@ import {
   editOperation,
 } from '@/entities/Operation/api';
 import { operationSchema, type OperationFormType } from '../types';
-import { periods, type Operation } from '@/entities/Operation/types';
+import { periodsLabels, type Operation } from '@/entities/Operation/types';
 
 export const OperationDialogWindow: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -147,28 +147,38 @@ export const OperationDialogWindow: React.FC = () => {
                 location.reload();
               })}
             >
-              <input
-                className="font-medium p-1 bg-gray-100"
-                placeholder="Описание операции"
-                {...register('description')}
-              />
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>Описание</Label>
+                <input
+                  className="font-medium p-1 bg-gray-100"
+                  placeholder="Описание операции"
+                  {...register('description')}
+                />
+              </Field>
               <ErrorMessage message={formState.errors.description?.message} />
-              <input
-                className="p-1 bg-gray-100"
-                type="date"
-                {...register('date')}
-              />
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>{isPeriodic ? 'Начальная дата' : 'Дата'}</Label>
+                <input
+                  className="p-1 bg-gray-100"
+                  type="date"
+                  {...register('date')}
+                />
+              </Field>
               <ErrorMessage message={formState.errors.date?.message} />
-              <input
-                placeholder="Сумма операции"
-                className={clsx(
-                  'font-mono p-1 bg-gray-100 transition-base',
-                  amount > 0 && 'bg-green-300',
-                  amount === 0 && 'bg-yellow-200',
-                  amount < 0 && 'bg-red-300',
-                )}
-                {...register('amount')}
-              />
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>Сумма</Label>
+                <input
+                  placeholder="Сумма операции"
+                  className={clsx(
+                    'font-mono p-1 bg-gray-100 transition-base',
+                    amount > 0 && 'bg-green-300',
+                    amount === 0 && 'bg-yellow-200',
+                    amount < 0 && 'bg-red-300',
+                  )}
+                  {...register('amount')}
+                />
+              </Field>
+              <span className="text-sm">(может быть отрицательной)</span>
               <ErrorMessage message={formState.errors.amount?.message} />
               <div className="flex justify-start items-center gap-x-2">
                 <span>Периодическая?</span>
@@ -183,22 +193,30 @@ export const OperationDialogWindow: React.FC = () => {
               </div>
               <Transition show={isPeriodic}>
                 <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
-                  <Field>
+                  <Field className="flex justify-start items-center gap-x-2">
                     <Label>Период</Label>
-                    <Select {...register('period')}>
-                      {periods.map((period) => (
-                        <option value={period} key={period}>
+                    <Select className="border-1" {...register('period')}>
+                      {Object.entries(periodsLabels).map(([period, label]) => (
+                        <option label={label} value={period} key={period}>
                           {period}
                         </option>
                       ))}
                     </Select>
                   </Field>
                   <ErrorMessage message={formState.errors.period?.message} />
-                  <input
-                    className="p-1 bg-gray-100"
-                    type="date"
-                    {...register('ended_at')}
-                  />
+                  <Field className="flex justify-start items-center gap-x-2">
+                    <Label>Дата окончания периода</Label>
+                    <input
+                      className="p-1 bg-gray-100"
+                      type="date"
+                      {...register('ended_at', {
+                        setValueAs: (value) => {
+                          if (value === '') return undefined;
+                          return value;
+                        },
+                      })}
+                    />
+                  </Field>
                   <ErrorMessage message={formState.errors.ended_at?.message} />
                 </div>
               </Transition>

@@ -1,13 +1,13 @@
 type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-const periodsRecord: Record<PeriodData['period'], unknown> = {
-  daily: undefined,
-  weekly: undefined,
-  monthly: undefined,
-  yearly: undefined,
+export const periodsLabels: Record<PeriodData['period'], string> = {
+  daily: 'Ежедневно',
+  weekly: 'Еженедельно',
+  monthly: 'Ежемесячно',
+  yearly: 'Ежегодно',
 };
 
-export const periods = Object.keys(periodsRecord) as PeriodData['period'][];
+export const periods = Object.keys(periodsLabels) as PeriodData['period'][];
 
 export type PeriodData = {
   period: Period;
