@@ -1,24 +1,37 @@
-import type { FinNote } from '@/pages/AccountPage/ui/AccountPage';
 import clsx from 'clsx';
 import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 
-import { useFinDialogStore } from '../model';
+import { useOperationDialogStore } from '../model';
 import { Button } from '@/shared/ui';
+import { getAccountOperations, getOperation } from '@/entities/Operation';
+import { OperationTableRow } from './OperationTableRow';
 
-type FinTableProps = HTMLAttributes<HTMLDivElement> & {
-  notes: FinNote[];
+type OperationsTableProps = HTMLAttributes<HTMLDivElement> & {
+  accountId: string;
 };
 
-export const FinTable: React.FC<FinTableProps> = ({ notes, ...props }) => {
+export const OperationsTable: React.FC<OperationsTableProps> = ({
+  accountId,
+  ...props
+}) => {
   const [result, setResult] = useState<number>(0);
-  const openFinDialog = useFinDialogStore((state) => state.actions.open);
+  const openNewOpeationDialog = useOperationDialogStore(
+    (state) => state.openNew,
+  );
+  const [operationIds, setOperationIds] = useState<string[]>([]);
 
   useEffect(() => {
-    setResult(
-      notes.map((note) => note.value).reduce((acc, val) => acc + val, 0),
-    );
-  }, [notes]);
+    setOperationIds(getAccountOperations(accountId));
+  }, [accountId]);
+
+  useEffect(() => {
+    for (const id of operationIds) {
+      const amount = getOperation(id)?.amount;
+      if (!amount) continue;
+      setResult((value) => value + amount);
+    }
+  }, [operationIds]);
 
   return (
     <div {...props}>
@@ -67,33 +80,12 @@ export const FinTable: React.FC<FinTableProps> = ({ notes, ...props }) => {
         <Button
           className="cursor-pointer text-xl font-bold border border-t-0"
           variant="white"
-          onClick={() => openFinDialog('new')}
+          onClick={openNewOpeationDialog}
         >
           +
         </Button>
-        {notes.map((note) => (
-          <button
-            key={note.id}
-            className={clsx(
-              'grid grid-cols-3',
-              'border border-t-0 cursor-pointer',
-              'transition-base hover:bg-gray-300',
-            )}
-            onClick={() => openFinDialog(note)}
-          >
-            <span className="p-1">{note.date.toLocaleDateString()}</span>
-            <span className="p-1 border-x">{note.name}</span>
-            <span
-              className={clsx(
-                'font-mono p-1',
-                note.value > 0 && 'bg-green-300',
-                note.value === 0 && 'bg-yellow-200',
-                note.value < 0 && 'bg-red-300',
-              )}
-            >
-              {note.value}
-            </span>
-          </button>
+        {operationIds.map((id) => (
+          <OperationTableRow key={id} operationId={id} />
         ))}
       </div>
     </div>

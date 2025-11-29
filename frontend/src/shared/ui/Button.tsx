@@ -1,10 +1,10 @@
 import clsx from 'clsx';
-import type { HTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 import type React from 'react';
 
 type ButtonVariants = 'base' | 'white';
 
-type ButtonProps = HTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariants;
 };
 
