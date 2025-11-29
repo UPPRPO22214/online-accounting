@@ -1,11 +1,61 @@
 import clsx from 'clsx';
 import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 
 import { useOperationDialogStore } from '../model';
 import { Button } from '@/shared/ui';
 import { getAccountOperations, getOperation } from '@/entities/Operation';
 import { OperationTableRow } from './OperationTableRow';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
+
+const options = {
+  responsive: true,
+  plugins: {
+    title: {
+      display: true,
+      text: 'Накопление доходв и расходов',
+    }
+  },
+};
+
+const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+
+const data = {
+  labels,
+  datasets: [
+    {
+      label: 'Доходы',
+      data: labels.map(() => Math.random() * 2000 - 1000),
+      borderColor: '#7bf1a8',
+      fill: true,
+    },
+    {
+      label: 'Расходы',
+      data: labels.map(() => Math.random() * 2000 - 1000),
+      borderColor: 'oklch(80.8% 0.114 19.571)',
+    },
+  ],
+};
 
 type OperationsTableProps = HTMLAttributes<HTMLDivElement> & {
   accountId: string;
@@ -58,6 +108,7 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
           <Button className="px-3">Текущий год</Button>
         </div>
       </div>
+      <Line options={options} data={data} />
       <div className="flex gap-2 justify-start items-center mb-2">
         <span>Итого:</span>
         <span
