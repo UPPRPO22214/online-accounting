@@ -9,13 +9,28 @@ bun i --frozen-lockfile
 bun run dev
 ```
 
-## Сборка
+Тесты в watch-режиме:
 ```bash
-bun run build
+bun run test:dev
 ```
 
-## Contribution
 Для коммита писать:
 ```bash
 bun run commit <commit_flags>
+```
+
+## Тестирование
+Одноразовый запуск тестов:
+```bash
+bun run test:check
+```
+
+Запуск всех проверок (линтер, тесты, сборка):
+```bash
+bun run all-checks
+```
+
+## Сборка
+```bash
+bun run build
 ```
