@@ -3,26 +3,23 @@ import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 import { useOperationDialogStore } from '../model';
 import { getAmountColorClass } from '@/shared/ui/getAmountColorClsss';
-import { getOperation, type Operation } from '@/entities/Operation';
+import { type Operation } from '@/entities/Operation';
+import { isoDateToDate } from '@/shared/types';
 
 type OperationsTableProps = HTMLAttributes<HTMLButtonElement> & {
-  operationId: string;
+  operation: Operation;
 };
 
 export const OperationTableRow: React.FC<OperationsTableProps> = ({
-  operationId,
+  operation,
   ...props
 }) => {
   const openOperationDialog = useOperationDialogStore((state) => state.open);
-  const [operation, setOperation] = useState<Operation>();
   const [amountColor, setAmountColor] = useState<string>();
 
   useEffect(() => {
-    const operation = getOperation(operationId);
-    if (!operation) return;
-    setOperation(operation);
     setAmountColor(getAmountColorClass(operation.amount));
-  }, [operationId]);
+  }, [operation]);
 
   return (
     <button
@@ -38,7 +35,7 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
     >
       {operation ? (
         <>
-          <span className="p-1">{operation.date}</span>
+          <span className="p-1">{isoDateToDate.decode(operation.date).toLocaleDateString()}</span>
           <span className="p-1 border-x">{operation.description}</span>
           <span className={clsx('font-mono p-1', amountColor)}>
             {operation.amount}
