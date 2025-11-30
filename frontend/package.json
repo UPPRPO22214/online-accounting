@@ -12,8 +12,8 @@
     "lint:fix": "eslint --fix .",
     "prettier": "prettier -w ./src",
     "preview": "vite preview",
-    "all-checks": "bun run lint:check && bun run test:check && bun run build && bun run prettier",
-    "commit": "bun run all-checks && git add -A && git commit"
+    "all-checks": "bun run lint:check && bun run test:check && bun run build",
+    "commit": "bun run prettier && bun run all-checks && git add -A && git commit"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
