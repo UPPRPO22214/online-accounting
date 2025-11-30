@@ -20,14 +20,7 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
   const setOperations = useAccountOperationsStore((state) => state.set);
 
   useEffect(() => {
-    // TODO: Добавить тест
-    const operations = getAccountOperations(accountId).sort((a, b) => {
-      if (a.date > b.date) return 1;
-      else if (a.date < b.date) return -1;
-      else return 0;
-    });
-
-    setOperations(operations);
+    setOperations(getAccountOperations(accountId));
   }, [accountId, setOperations]);
 
   return (

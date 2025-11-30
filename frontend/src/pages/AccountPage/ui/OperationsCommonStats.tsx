@@ -1,4 +1,4 @@
-import { useEffect, useState, type HTMLAttributes } from 'react';
+import { type HTMLAttributes } from 'react';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 
@@ -13,18 +13,7 @@ export const OperationsCommonStats: React.FC<OperationsCommonStatsProps> = ({
   className,
   ...props
 }) => {
-  const operations = useAccountOperationsStore((state) => state.operations);
-
-  const [result, setResult] = useState<number>(0);
-
-  useEffect(() => {
-    let result = 0;
-    for (const operation of operations) {
-      result += operation.amount;
-    }
-
-    setResult(result);
-  }, [operations]);
+  const totalAmount = useAccountOperationsStore((state) => state.totalAmount);
 
   return (
     <div
@@ -36,12 +25,12 @@ export const OperationsCommonStats: React.FC<OperationsCommonStatsProps> = ({
         <span
           className={clsx(
             'font-mono p-1',
-            result > 0 && 'bg-green-300',
-            result === 0 && 'bg-yellow-200',
-            result < 0 && 'bg-red-300',
+            totalAmount > 0 && 'bg-green-300',
+            totalAmount === 0 && 'bg-yellow-200',
+            totalAmount < 0 && 'bg-red-300',
           )}
         >
-          {result}
+          {totalAmount}
         </span>
       </div>
       <Popover>

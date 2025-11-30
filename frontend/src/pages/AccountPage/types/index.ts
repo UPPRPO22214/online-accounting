@@ -1,3 +1,5 @@
+export { type ChartsDatasets, getChartDataset } from './ChartDatasets';
+
 import * as z from 'zod';
 
 export const operationSchema = z.object({
