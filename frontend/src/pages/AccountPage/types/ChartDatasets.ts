@@ -1,5 +1,5 @@
-import type { Operation } from "@/entities/Operation";
-import { isoDateToDate } from "@/shared/types";
+import type { Operation } from '@/entities/Operation';
+import { isoDateToDate } from '@/shared/types';
 
 type ChartVariants = 'accumulate' | 'separate';
 
@@ -48,4 +48,4 @@ export const getChartDataset = (
     }
   }
   return preData;
-}
+};

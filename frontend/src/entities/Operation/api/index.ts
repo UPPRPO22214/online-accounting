@@ -2,7 +2,10 @@ import { getLocalStorageItem, saveLocalStorageItem } from '@/shared/api';
 import type { Operation } from '../types';
 
 export const getAccountOperations = (accountId: string) => {
-  return getLocalStorageItem<Operation[]>(`account-${accountId}-operations`, []);
+  return getLocalStorageItem<Operation[]>(
+    `account-${accountId}-operations`,
+    [],
+  );
 };
 
 export const getOperation = (operationId: string) => {

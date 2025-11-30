@@ -35,7 +35,9 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
     >
       {operation ? (
         <>
-          <span className="p-1">{isoDateToDate.decode(operation.date).toLocaleDateString()}</span>
+          <span className="p-1">
+            {isoDateToDate.decode(operation.date).toLocaleDateString()}
+          </span>
           <span className="p-1 border-x">{operation.description}</span>
           <span className={clsx('font-mono p-1', amountColor)}>
             {operation.amount}

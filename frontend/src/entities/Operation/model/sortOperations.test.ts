@@ -76,22 +76,26 @@ describe('Sort operations tests', () => {
         description: 'description b',
       },
     ];
-    expect(sortOperations(operations)).toStrictEqual([operations[1], operations[0]]);
+    expect(sortOperations(operations)).toStrictEqual([
+      operations[1],
+      operations[0],
+    ]);
   });
 
   test('Big', () => {
     const SECS_IN_DAY = 1000 * 60 * 60 * 24;
     const dates: string[] = [];
-    for (let i = 0; i < 1000; i++) dates.push(isoDateToDate.encode(new Date(i * SECS_IN_DAY)));
-    dates.reverse()
+    for (let i = 0; i < 1000; i++)
+      dates.push(isoDateToDate.encode(new Date(i * SECS_IN_DAY)));
+    dates.reverse();
     const expected = dates.map((date, i) => ({
-        id: 'id ' + date,
-        date: date,
-        amount: i,
-        description: 'description ' + date,
-    }))
+      id: 'id ' + date,
+      date: date,
+      amount: i,
+      description: 'description ' + date,
+    }));
     const operations = [...expected];
     expected.reverse();
     expect(sortOperations(operations)).toStrictEqual(expected);
-  })
+  });
 });

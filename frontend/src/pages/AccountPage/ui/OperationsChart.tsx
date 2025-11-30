@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
   type ChartData,
-  type ChartOptions
+  type ChartOptions,
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 
@@ -38,8 +38,6 @@ function getOptions(title?: string): ChartOptions {
     },
   };
 }
-
-
 
 type OperationsChartProps = HTMLAttributes<HTMLCanvasElement> & {
   title: string;

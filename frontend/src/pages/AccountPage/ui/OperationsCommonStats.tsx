@@ -49,7 +49,11 @@ export const OperationsCommonStats: React.FC<OperationsCommonStatsProps> = ({
           transition
           anchor="bottom"
         >
-          <OperationsChart title="Гистограмма доходов и расходов по дням" variant="separate" type="bar" />
+          <OperationsChart
+            title="Гистограмма доходов и расходов по дням"
+            variant="separate"
+            type="bar"
+          />
         </PopoverPanel>
       </Popover>
       <Popover>
@@ -68,7 +72,11 @@ export const OperationsCommonStats: React.FC<OperationsCommonStatsProps> = ({
           transition
           anchor="bottom"
         >
-          <OperationsChart title="Накопительный график доходов и расходов" variant="accumulate" type="line" />
+          <OperationsChart
+            title="Накопительный график доходов и расходов"
+            variant="accumulate"
+            type="line"
+          />
         </PopoverPanel>
       </Popover>
     </div>

@@ -11,7 +11,7 @@
     "lint-fix": "eslint --fix .",
     "prettier": "prettier -w ./src",
     "preview": "vite preview",
-    "all-checks": "bun run lint-check && bun run build && bun run prettier",
+    "all-checks": "bun run lint-check && bun run test && bun run build && bun run prettier",
     "commit": "bun run all-checks && git add -A && git commit"
   },
   "dependencies": {
