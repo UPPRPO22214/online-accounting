@@ -1,4 +1,4 @@
-import { useEffect, useState, type HTMLAttributes } from 'react';
+import { useEffect, useMemo, useState, type HTMLAttributes } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,12 +10,12 @@ import {
   Tooltip,
   Legend,
   type ChartData,
+  type ChartOptions
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 
-import clsx from 'clsx';
-import type { Operation } from '@/entities/Operation';
 import { isoDateToDate } from '@/shared/types';
+import { useAccountOperationsStore } from '../model';
 
 ChartJS.register(
   CategoryScale,
@@ -28,15 +28,17 @@ ChartJS.register(
   Legend,
 );
 
-const options = {
-  responsive: true,
-  plugins: {
-    title: {
-      display: true,
-      text: 'Накопление доходв и расходов',
+function getOptions(title?: string): ChartOptions {
+  return {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: title,
+      },
     },
-  },
-};
+  };
+}
 
 type OperationAmountsByDate = {
   date: string[];
@@ -44,19 +46,21 @@ type OperationAmountsByDate = {
   outcome: number[];
 };
 
-type OperationsChartProps = HTMLAttributes<HTMLDivElement> & {
-  operations: Operation[];
+type OperationsChartProps = HTMLAttributes<HTMLCanvasElement> & {
+  title: string;
   type: 'bar' | 'line';
   variant: 'accumulate' | 'separate';
 };
 
 export const OperationsChart: React.FC<OperationsChartProps> = ({
-  operations,
-  type = 'bar',
-  variant = 'separate',
-  className,
+  title,
+  type,
+  variant,
   ...props
 }) => {
+  const operations = useAccountOperationsStore((state) => state.operations);
+
+  const options = useMemo(() => getOptions(title), [title]);
   const [data, setData] = useState<ChartData<typeof type>>({ datasets: [] });
 
   useEffect(() => {
@@ -68,6 +72,8 @@ export const OperationsChart: React.FC<OperationsChartProps> = ({
       outcome: [],
     };
     for (const operation of operations) {
+      if (operation.amount === 0) continue;
+
       const opDate = isoDateToDate.decode(operation.date).toLocaleDateString(); // TODO: надо сделать лучше (нет)
 
       const len = preData.date.length;
@@ -113,8 +119,6 @@ export const OperationsChart: React.FC<OperationsChartProps> = ({
   }, [variant, type, operations]);
 
   return (
-    <div className={clsx('', className)} {...props}>
-      <Chart type={type} options={options} data={data} />
-    </div>
+    <Chart type={type} title={title} data={data} options={options} {...props} />
   );
 };

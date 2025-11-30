@@ -2,11 +2,11 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'wouter';
 
-import { OperationsTable } from './OperationsTable';
 import { OperationDialogWindow } from './OperationDialogWindow';
 // import { useAuthStore, type User } from '@/entities/User';
 import { useAuthStore } from '@/entities/User';
 import { getAccount, type Account } from '@/entities/Account';
+import { OpeartionsDashboard } from './OpeartionsDashboard';
 
 export const AccountPage: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -43,7 +43,7 @@ export const AccountPage: React.FC = () => {
           ))}
         </ul> */}
       </div>
-      <OperationsTable accountId={accountId} />
+      <OpeartionsDashboard accountId={accountId} />
       <OperationDialogWindow />
     </div>
   );
