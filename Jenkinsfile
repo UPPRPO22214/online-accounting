@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GOCACHE = '/tmp/go-build-cache'
-        SONARQUBE_URL = 'http://sonarqube:8009'
+        SONARQUBE_URL = 'http://84.237.53.137:8009'
         SONARQUBE_TOKEN = credentials('2e132c76-a1b4-4f0e-ab4f-93c9dc12d2d1')
     }
 
