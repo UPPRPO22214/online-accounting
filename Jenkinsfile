@@ -55,6 +55,17 @@ pipeline {
                         -Dsonar.login=${SONARQUBE_TOKEN}
                     """
                 }
+
+                script {
+                    sh """
+                        cd frontend && 
+                        sonar-scanner \\
+                        -Dsonar.projectKey=frontend \\
+                        -Dsonar.sources=src \\
+                        -Dsonar.host.url=${SONARQUBE_URL} \\
+                        -Dsonar.login=${SONARQUBE_TOKEN}
+                    """
+                }
             }
         }
     }
