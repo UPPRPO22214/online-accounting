@@ -14,12 +14,12 @@ type RefreshTokenRepository struct {
 	queries *query.Queries
 }
 
-func NewRefreshTokenRepository(db *sql.DB) *RefreshTokenRepository {
+func newRefreshTokenRepository(db query.DBTX) *RefreshTokenRepository {
 	return &RefreshTokenRepository{queries: query.New(db)}
 }
 
-func (r *RefreshTokenRepository) WithTx(tx *sql.Tx) RefreshTokenRepository {
-	return RefreshTokenRepository{queries: r.queries.WithTx(tx)}
+func (r *RefreshTokenRepository) WithTx(tx *sql.Tx) *RefreshTokenRepository {
+	return &RefreshTokenRepository{queries: r.queries.WithTx(tx)}
 }
 
 func (r *RefreshTokenRepository) GenerateToken(ctx context.Context, params *models.GenerateToken) error {

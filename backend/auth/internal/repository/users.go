@@ -14,12 +14,12 @@ type UserRepository struct {
 	queries *query.Queries
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
+func newUserRepository(db query.DBTX) *UserRepository {
 	return &UserRepository{queries: query.New(db)}
 }
 
-func (r *UserRepository) WithTx(tx *sql.Tx) UserRepository {
-	return UserRepository{queries: r.queries.WithTx(tx)}
+func (r *UserRepository) WithTx(tx *sql.Tx) *UserRepository {
+	return &UserRepository{queries: r.queries.WithTx(tx)}
 }
 
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
