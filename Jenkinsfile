@@ -38,8 +38,23 @@ pipeline {
         }
 
         stage('Sonar Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest' 
+                }
+            }
+            
             steps {
-                sh 'cd backend && sonar-scanner -Dsonar.projectKey=backend-auth -Dsonar.sources=auth -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${SONARQUBE_TOKEN}'
+                script {
+                    sh """
+                        cd backend && 
+                        sonar-scanner \\
+                        -Dsonar.projectKey=backend-auth \\
+                        -Dsonar.sources=auth \\
+                        -Dsonar.host.url=${SONARQUBE_URL} \\
+                        -Dsonar.login=${SONARQUBE_TOKEN}
+                    """
+                }
             }
         }
     }
