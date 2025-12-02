@@ -64,6 +64,7 @@ func (r *RefreshTokenRepository) UseValidToken(ctx context.Context, userID int, 
 	if err != nil {
 		return err
 	}
+
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
@@ -71,6 +72,7 @@ func (r *RefreshTokenRepository) UseValidToken(ctx context.Context, userID int, 
 	if rows != 1 {
 		return fmt.Errorf("expected to affect 1 token, affected %d", rows)
 	}
+	
 	return nil
 }
 

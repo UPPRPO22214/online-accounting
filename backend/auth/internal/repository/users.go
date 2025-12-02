@@ -30,6 +30,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*mod
 		}
 		return nil, err
 	}
+
 	return &models.User{
 		ID:           int(user.ID),
 		Email:        user.Email,
@@ -42,6 +43,7 @@ func (r *UserRepository) UserExistsByID(ctx context.Context, id int) (bool, erro
 	if err != nil {
 		return false, err
 	}
+
 	return exists, nil
 }
 
@@ -53,10 +55,12 @@ func (r *UserRepository) CreateUser(ctx context.Context, params *models.CreateUs
 	if err != nil {
 		return 0, err
 	}
+
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
+
 	return int(id), nil
 }
 
@@ -68,6 +72,7 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, id int, passwor
 	if err != nil {
 		return err
 	}
+
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
@@ -75,5 +80,6 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, id int, passwor
 	if rows != 1 {
 		return fmt.Errorf("expected to affect 1 user, affected %d", rows)
 	}
+	
 	return nil
 }

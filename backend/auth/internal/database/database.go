@@ -15,10 +15,10 @@ type Database struct {
 	db *sql.DB
 }
 
-func New(cfg *config.Config) (*Database, error) {
+func New(cfg config.Database) (*Database, error) {
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?multiStatements=true&parseTime=true&tls=%s",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBTLS,
+		"%s:%s@tcp(%s:%d)/%s?multiStatements=true&parseTime=true&tls=%t",
+		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name, cfg.TLS,
 	)
 
 	db, err := sql.Open("mysql", dsn)
@@ -26,10 +26,10 @@ func New(cfg *config.Config) (*Database, error) {
 		return nil, fmt.Errorf("couldn't init the database: %w", err)
 	}
 
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(25)
-	db.SetConnMaxLifetime(5 * time.Minute)
-	db.SetConnMaxIdleTime(2 * time.Minute)
+	db.SetMaxOpenConns(cfg.Connections)
+	db.SetMaxIdleConns(cfg.Connections)
+	db.SetConnMaxLifetime(2 * time.Duration(cfg.ConnLifetime) * time.Minute)
+	db.SetConnMaxIdleTime(time.Duration(cfg.ConnLifetime) * time.Minute)
 
 	return &Database{db: db}, nil
 }
@@ -38,9 +38,10 @@ func (d *Database) DB() *sql.DB {
 	return d.db
 }
 
-func (d *Database) HealthCheck() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (d *Database) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	return d.db.PingContext(ctx)
 }
 
@@ -48,5 +49,6 @@ func (d *Database) Close() error {
 	if d.db != nil {
 		return d.db.Close()
 	}
+
 	return nil
 }
