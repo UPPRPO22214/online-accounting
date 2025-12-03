@@ -18,8 +18,8 @@ func newUserRepository(db query.DBTX) *UserRepository {
 	return &UserRepository{queries: query.New(db)}
 }
 
-func (r *UserRepository) WithTx(tx *sql.Tx) *UserRepository {
-	return &UserRepository{queries: r.queries.WithTx(tx)}
+func (r *UserRepository) WithTx(tx *sql.Tx) UserRepository {
+	return UserRepository{queries: r.queries.WithTx(tx)}
 }
 
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -80,6 +80,6 @@ func (r *UserRepository) UpdateUserPassword(ctx context.Context, id int, passwor
 	if rows != 1 {
 		return fmt.Errorf("expected to affect 1 user, affected %d", rows)
 	}
-	
+
 	return nil
 }

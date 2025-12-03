@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var Logger zerolog.Logger
+var Log zerolog.Logger
 
 func init() {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
@@ -20,7 +20,7 @@ func init() {
 		NoColor:    false,
 	}
 
-	Logger = zerolog.New(output).
+	Log = zerolog.New(output).
 		Level(zerolog.InfoLevel).
 		With().
 		Timestamp().
@@ -29,39 +29,39 @@ func init() {
 }
 
 func Set(cfg config.Logger) {
-	Logger = Logger.Level(getLogLevel(cfg.LogLevel))
+	Log = Log.Level(getLogLevel(cfg.LogLevel))
 }
 
 func Debug() *zerolog.Event {
-	return Logger.Debug()
+	return Log.Debug()
 }
 
 func Info() *zerolog.Event {
-	return Logger.Info()
+	return Log.Info()
 }
 
 func Warn() *zerolog.Event {
-	return Logger.Warn()
+	return Log.Warn()
 }
 
 func Error() *zerolog.Event {
-	return Logger.Error()
+	return Log.Error()
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function
 // is called by the Msg method.
 func Fatal() *zerolog.Event {
-	return Logger.Fatal()
+	return Log.Fatal()
 }
 
 // Panic starts a new message with panic level. The message is also sent
 // to the panic function.
 func Panic() *zerolog.Event {
-	return Logger.Panic()
+	return Log.Panic()
 }
 
 func With() zerolog.Context {
-	return Logger.With()
+	return Log.With()
 }
 
 func getLogLevel(level string) zerolog.Level {

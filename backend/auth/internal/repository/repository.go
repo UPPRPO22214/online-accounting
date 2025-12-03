@@ -10,6 +10,11 @@ type Repository struct {
 	RefreshTokenRepo *RefreshTokenRepository
 }
 
+type TxRepository struct {
+	UserRepo UserRepository
+	RefreshTokenRepo RefreshTokenRepository
+}
+
 func New(db query.DBTX) *Repository {
 	return &Repository{
 		UserRepo:         newUserRepository(db),
@@ -17,8 +22,8 @@ func New(db query.DBTX) *Repository {
 	}
 }
 
-func (r *Repository) WithTx(tx *sql.Tx) Repository {
-	return Repository{
+func (r *Repository) WithTx(tx *sql.Tx) TxRepository {
+	return TxRepository{
 		UserRepo:         r.UserRepo.WithTx(tx),
 		RefreshTokenRepo: r.RefreshTokenRepo.WithTx(tx),
 	}

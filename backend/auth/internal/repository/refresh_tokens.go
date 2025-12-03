@@ -18,8 +18,8 @@ func newRefreshTokenRepository(db query.DBTX) *RefreshTokenRepository {
 	return &RefreshTokenRepository{queries: query.New(db)}
 }
 
-func (r *RefreshTokenRepository) WithTx(tx *sql.Tx) *RefreshTokenRepository {
-	return &RefreshTokenRepository{queries: r.queries.WithTx(tx)}
+func (r *RefreshTokenRepository) WithTx(tx *sql.Tx) RefreshTokenRepository {
+	return RefreshTokenRepository{queries: r.queries.WithTx(tx)}
 }
 
 func (r *RefreshTokenRepository) GenerateToken(ctx context.Context, params *models.GenerateToken) error {
@@ -72,7 +72,7 @@ func (r *RefreshTokenRepository) UseValidToken(ctx context.Context, userID int, 
 	if rows != 1 {
 		return fmt.Errorf("expected to affect 1 token, affected %d", rows)
 	}
-	
+
 	return nil
 }
 

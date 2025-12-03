@@ -20,7 +20,7 @@ func New(db *database.Database, repo *repository.Repository) *Transactor {
 	}
 }
 
-func (t *Transactor) Do(ctx context.Context, opts *sql.TxOptions, fn func(repository.Repository) error) error {
+func (t *Transactor) Do(ctx context.Context, opts *sql.TxOptions, fn func(repository.TxRepository) error) error {
 	tx, err := t.db.DB().BeginTx(ctx, opts)
 	if err != nil {
 		return err
