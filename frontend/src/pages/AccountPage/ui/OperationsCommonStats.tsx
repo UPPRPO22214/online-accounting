@@ -43,7 +43,7 @@ export const OperationsCommonStats: React.FC<OperationsCommonStatsProps> = ({
         </PopoverButton>
         <PopoverPanel
           className={clsx(
-            'w-1/2 p-2 bg-white border-2',
+            'w-1/2 m-1 p-2 bg-white border-2',
             'transition-base ease-out data-closed:-translate-y-6 data-closed:opacity-0',
           )}
           transition
@@ -66,7 +66,7 @@ export const OperationsCommonStats: React.FC<OperationsCommonStatsProps> = ({
         </PopoverButton>
         <PopoverPanel
           className={clsx(
-            'w-1/2 p-2 bg-white border-2',
+            'w-1/2 m-1 p-2 bg-white border-2',
             'transition-base ease-out data-closed:-translate-y-6 data-closed:opacity-0',
           )}
           transition

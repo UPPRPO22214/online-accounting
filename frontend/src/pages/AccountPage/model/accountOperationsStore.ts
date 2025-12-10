@@ -1,6 +1,6 @@
 import type { Operation } from '@/entities/Operation';
 import { createWrappedStore } from '@/shared/store';
-import { getChartDataset, type ChartsDatasets } from '../types';
+import { getChartDataset, type ChartsDatasets } from '../types/chartDatasetsTypes';
 
 type AccountOperationsStoreType = {
   operations: Operation[];

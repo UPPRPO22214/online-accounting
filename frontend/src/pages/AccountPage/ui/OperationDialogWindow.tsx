@@ -22,7 +22,7 @@ import {
   deleteOperation,
   editOperation,
 } from '@/entities/Operation/api';
-import { operationSchema, type OperationFormType } from '../types';
+import { operationSchema, type OperationFormType } from '../types/operationFormTypes';
 import { periodsLabels, type Operation } from '@/entities/Operation/types';
 
 export const OperationDialogWindow: React.FC = () => {

@@ -31,7 +31,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
     <div className={clsx('border p-2', className)}>
       <form
         onSubmit={handleSubmit((value) => {
-          createAccount(user.id, {
+          createAccount(user, {
             ...value,
             id: crypto.randomUUID(),
           });
