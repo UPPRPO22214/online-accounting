@@ -5,14 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button, ErrorMessage } from '@/shared/ui';
-import { useAuthStore } from '@/entities/User';
+import { login } from '@/entities/User';
 import { loginZodSchema, type LoginType } from '../types';
 
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
-  const login = useAuthStore((state) => state.login);
-
   const { register, handleSubmit, formState } = useForm<LoginType>({
     resolver: zodResolver(loginZodSchema),
   });
@@ -22,8 +20,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
       <h2 className="text-2xl mb-2">Вход</h2>
       <form
         onSubmit={handleSubmit((loginValues) => {
-          console.log(loginValues);
-          login();
+          login(loginValues.email, loginValues.password);
+          location.reload(); // Убрать все такие релоады, когда будет реальное апи
         })}
         className="grid grid-cols-1 gap-4"
       >

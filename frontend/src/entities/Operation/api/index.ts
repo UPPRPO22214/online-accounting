@@ -24,8 +24,15 @@ export const createOperation = (accountId: string, operation: Operation) => {
   ]);
 };
 
-export const editOperation = (operation: Operation) => {
+export const editOperation = (accountId: string, operation: Operation) => {
   saveLocalStorageItem<Operation>(`operation-${operation.id}`, operation);
+  const operations = getAccountOperations(accountId).filter(
+    (other) => other.id !== operation.id,
+  );
+  saveLocalStorageItem<Operation[]>(`account-${accountId}-operations`, [
+    ...operations,
+    operation,
+  ]);
 };
 
 export const deleteOperation = (operationId: string, accountId: string) => {

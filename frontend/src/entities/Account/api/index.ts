@@ -1,25 +1,38 @@
 import { getLocalStorageItem, saveLocalStorageItem } from '@/shared/api';
-import type { AccountMember, Account } from '../types';
-import type { User } from '@/entities/User';
+import type { AccountMember, Account, MemberRole } from '../types';
+import { type User, getMe, getUsers } from '@/entities/User/@x/account';
 
-export const getAccount = (userId: number, accountId: string) => {
-  const accounts = getUserAccounts(userId); // Пока что только среди своих ищем, потом будет иначе
-  return accounts.find((account) => account.id === accountId);
+export const getAccounts = () => getLocalStorageItem<Account[]>('accounts', []);
+
+export const getAccount = (accountId: string) => {
+  return getAccounts().find((account) => account.id === accountId);
 };
 
 export const getAccountMembers = (accountId: string) => {
   return getLocalStorageItem<AccountMember[]>(`members-${accountId}`, []);
 };
 
-export const addAccountMember = (accountId: string, member: AccountMember) => {
+export const getMyRole = (accountId: string) => {
+  const me = getMe();
+  if (!me) return;
+  return getAccountMembers(accountId).find((member) => member.id === me.id);
+};
+
+export const addAccountMember = (
+  accountId: string,
+  email: string,
+  role: MemberRole,
+) => {
+  const user = getUsers().find((user) => user.email === email);
+  if (!user) return;
   const members = getAccountMembers(accountId);
-  if (members.some((other) => other.id === member.id)) {
+  if (members.some((other) => other.id === user.id)) {
     console.error('[ADD ACCOUNT MEMBER] Member already exists');
     return;
   }
   saveLocalStorageItem<AccountMember[]>(`members-${accountId}`, [
     ...members,
-    member,
+    { ...user, role },
   ]);
 };
 
@@ -34,7 +47,7 @@ export const editAccountMember = (
   }
   saveLocalStorageItem<AccountMember[]>(
     `members-${accountId}`,
-    members.map((member) => (member.id !== newMember.id ? member : newMember)),
+    members.map((member) => (member.id === newMember.id ? newMember : member)),
   );
 };
 
@@ -54,18 +67,14 @@ export const removeAccountMember = (
   );
 };
 
-export const getUserAccounts = (ownerId: number) => {
-  return getLocalStorageItem<Account[]>(`accounts-${ownerId}`, []);
+export const getUserAccounts = (userId: number) => {
+  return getAccounts().filter((account) =>
+    getAccountMembers(account.id).some((member) => member.id === userId),
+  );
 };
 
 export const createAccount = (owner: User, newAccount: Account) => {
-  const otherAccounts = getLocalStorageItem<Account[]>(
-    `accounts-${owner.id}`,
-    [],
-  );
-  saveLocalStorageItem<Account[]>(`accounts-${owner.id}`, [
-    ...otherAccounts,
-    newAccount,
-  ]);
-  addAccountMember(newAccount.id, { ...owner, role: 'owner' });
+  const otherAccounts = getAccounts();
+  saveLocalStorageItem<Account[]>('accounts', [...otherAccounts, newAccount]);
+  addAccountMember(newAccount.id, owner.email, 'owner');
 };

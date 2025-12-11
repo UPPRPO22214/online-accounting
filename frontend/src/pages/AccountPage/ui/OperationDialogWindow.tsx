@@ -7,8 +7,8 @@ import {
   Label,
   Select,
   Transition,
+  Checkbox,
 } from '@headlessui/react';
-import { Checkbox } from '@headlessui/react';
 import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams } from 'wouter';
@@ -22,7 +22,10 @@ import {
   deleteOperation,
   editOperation,
 } from '@/entities/Operation/api';
-import { operationSchema, type OperationFormType } from '../types/operationFormTypes';
+import {
+  operationSchema,
+  type OperationFormType,
+} from '../types/operationFormTypes';
 import { periodsLabels, type Operation } from '@/entities/Operation/types';
 
 export const OperationDialogWindow: React.FC = () => {
@@ -141,7 +144,7 @@ export const OperationDialogWindow: React.FC = () => {
                 if (mode === 'create') {
                   createOperation(accountId, newOperation);
                 } else {
-                  editOperation(newOperation);
+                  editOperation(accountId, newOperation);
                 }
                 close();
                 location.reload();
@@ -169,6 +172,7 @@ export const OperationDialogWindow: React.FC = () => {
                 <Label>Сумма</Label>
                 <input
                   placeholder="Сумма операции"
+                  type="number"
                   className={clsx(
                     'font-mono p-1 bg-gray-100 transition-base',
                     amount > 0 && 'bg-green-300',

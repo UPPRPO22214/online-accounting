@@ -2,20 +2,25 @@ import type React from 'react';
 import { Link } from 'wouter';
 
 import { Button } from '@/shared/ui';
-import { useAuthStore } from '@/entities/User';
+import { getMe, logout, type User } from '@/entities/User';
 import { AccountForm } from './AccountForm';
 import { useEffect, useState } from 'react';
 import { type Account, getUserAccounts } from '@/entities/Account';
 
 export const ProfileLayout: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-
   const [accounts, setAccounts] = useState<Account[]>([]);
 
+  const [user, setUser] = useState<User>();
   useEffect(() => {
+    setUser(getMe());
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
     setAccounts(getUserAccounts(user.id));
-  }, [user.id]);
+  }, [user]);
+
+  if (!user) return <div>Loading...</div>; // TODO: Добавить нормальный лоадер
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -49,7 +54,10 @@ export const ProfileLayout: React.FC = () => {
       </div>
       <Button
         className="p-1 px-3 hover:cursor-pointer w-fit m-auto"
-        onClick={() => logout()}
+        onClick={() => {
+          logout();
+          location.reload(); // Убрать все такие релоады, когда будет реальное апи
+        }}
       >
         Выйти
       </Button>
