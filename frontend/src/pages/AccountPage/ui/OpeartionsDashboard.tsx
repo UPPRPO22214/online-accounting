@@ -49,7 +49,7 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
         </div>
       </div>
       <OperationsCommonStats className="my-2" />
-      <OperationsTable />
+      <OperationsTable accountId={accountId} />
     </div>
   );
 };

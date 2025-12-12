@@ -30,7 +30,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
     resolver: zodResolver(accountZodSchema),
   });
 
-  if (!user) return <div>Loading...</div>; // TODO: Добавить нормальный лоадер
+  if (!user) return <div>Loading...</div>;
 
   return (
     <div className={clsx('border p-2', className)}>

@@ -6,8 +6,7 @@ import { OperationDialogWindow } from './OperationDialogWindow';
 import { getAccount, type Account } from '@/entities/Account';
 import { OpeartionsDashboard } from './OpeartionsDashboard';
 import { MembersPanel } from './MembersPanel';
-import type { AccountMember } from '@/entities/Account/types';
-import { getMyRole } from '@/entities/Account/api';
+import { getMyRole, type AccountMember } from '@/entities/AccountMember';
 
 export const AccountPage: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -22,15 +21,23 @@ export const AccountPage: React.FC = () => {
     setAccount(account);
   }, [accountId]); // Именно так, а не в одном хуке, потому что далее юзер будет получаться асинхронно
 
-  if (!meMember) return <div>У вас нет прав на просмотр счёта</div>;
+  if (!meMember)
+    return (
+      <div className="w-full">
+        <Link href="/">На главную</Link>
+        <h1 className="text-center text-2xl text-red-500">
+          У вас нет прав на просмотр счёта
+        </h1>
+      </div>
+    );
 
   if (!account)
     return (
       <div className="w-full">
+        <Link href="/">На главную</Link>
         <h1 className="text-center text-2xl text-red-500">
           Счёт с ID {accountId} не найден
         </h1>
-        <Link href="/">На главную</Link>
       </div>
     );
 

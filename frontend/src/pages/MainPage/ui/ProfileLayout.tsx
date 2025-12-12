@@ -20,7 +20,7 @@ export const ProfileLayout: React.FC = () => {
     setAccounts(getUserAccounts(user.id));
   }, [user]);
 
-  if (!user) return <div>Loading...</div>; // TODO: Добавить нормальный лоадер
+  if (!user) return <div>Loading...</div>;
 
   return (
     <div className="grid grid-cols-1 gap-6">

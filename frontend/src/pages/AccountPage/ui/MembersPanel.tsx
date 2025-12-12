@@ -1,11 +1,14 @@
 import {
-  Field,
   Popover,
   PopoverButton,
   PopoverPanel,
   Select,
 } from '@headlessui/react';
-import { ChevronDownIcon, PencilSquareIcon } from '@heroicons/react/20/solid';
+import {
+  ChevronDownIcon,
+  PencilSquareIcon,
+  XMarkIcon,
+} from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
@@ -15,12 +18,17 @@ import {
   getAccountMembers,
   getMyRole,
   removeAccountMember,
-} from '@/entities/Account/api';
-import { membersLabels, type AccountMember } from '@/entities/Account/types';
+  membersLabels,
+  type AccountMember,
+  checkRole,
+  membersChoosableLabels,
+  editAccountMember,
+} from '@/entities/AccountMember';
 import { Button, ErrorMessage } from '@/shared/ui';
 import { memberSchema, type MemberFormType } from '../types/memberFormTypes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import type { MemberRole } from '@/entities/AccountMember/types';
 
 type MembersPanelProps = HTMLAttributes<HTMLDivElement> & {
   accountId: string;
@@ -32,12 +40,14 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
   ...props
 }) => {
   const [members, setMembers] = useState<AccountMember[]>([]);
-  const [meMember, setMeMember] = useState<AccountMember>();
 
+  const [meMember, setMeMember] = useState<AccountMember>();
   useEffect(() => {
     setMeMember(getMyRole(accountId));
     setMembers(getAccountMembers(accountId));
   }, [accountId]);
+
+  const [editingId, setEditingId] = useState<number>();
 
   const { register, formState, handleSubmit } = useForm<MemberFormType>({
     resolver: zodResolver(memberSchema),
@@ -51,7 +61,7 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
       {...props}
     >
       <span>Ваша роль - {membersLabels[meMember.role]}</span>
-      {(meMember.role === 'owner' || meMember.role === 'admin') && (
+      {checkRole(meMember.role, 'admin') && (
         <Popover>
           <PopoverButton
             as={Button}
@@ -79,10 +89,42 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                     {member.nickname}
                   </div>
                   <div className="flex justify-center items-center gap-x-1 p-1">
-                    <span>{membersLabels[member.role]}</span>
-                    <Button>
-                      <PencilSquareIcon className="size-4" />
-                    </Button>
+                    {editingId === member.id ? (
+                      <>
+                        <Select
+                          className="border-1"
+                          defaultValue={member.role}
+                          onChange={(e) => {
+                            editAccountMember(accountId, {
+                              ...member,
+                              role: e.target.value as MemberRole,
+                            });
+                            setEditingId(undefined);
+                            location.reload(); // Временно
+                          }}
+                        >
+                          {Object.entries(membersChoosableLabels).map(
+                            ([role, label]) => (
+                              <option label={label} value={role} key={role}>
+                                {role}
+                              </option>
+                            ),
+                          )}
+                        </Select>
+                        <Button onClick={() => setEditingId(undefined)}>
+                          <XMarkIcon className="size-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span>{membersLabels[member.role]}</span>
+                        {member.role !== 'owner' && (
+                          <Button onClick={() => setEditingId(member.id)}>
+                            <PencilSquareIcon className="size-4" />
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </div>
                   <div className="flex justify-end items-center p-1">
                     {member.role !== 'owner' && (
@@ -115,19 +157,14 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                 placeholder="Электронная почта пользователя"
                 {...register('email')}
               />
-              <Field className="flex justify-around">
-                <Select className="border-1" {...register('role')}>
-                  {Object.entries(membersLabels)
-                    .filter(([role]) => role !== 'owner')
-                    .map(([role, label]) => (
-                      <option label={label} value={role} key={role}>
-                        {role}
-                      </option>
-                    ))}
-                </Select>
-              </Field>
+              <Select className="border-1" {...register('role')}>
+                {Object.entries(membersChoosableLabels).map(([role, label]) => (
+                  <option label={label} value={role} key={role}>
+                    {role}
+                  </option>
+                ))}
+              </Select>
               <Button>Добавить</Button>
-
               <ErrorMessage
                 className="col-span-3 text-center"
                 message={
