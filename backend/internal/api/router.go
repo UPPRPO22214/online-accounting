@@ -7,10 +7,15 @@ import (
 	"microservices/accounter/internal/usecases"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin.Engine {
 	router := gin.Default()
+
+	// Swagger documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(services.AuthScv)
