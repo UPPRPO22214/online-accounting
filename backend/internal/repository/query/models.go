@@ -14,10 +14,10 @@ import (
 type AccountMembersRole string
 
 const (
-	AccountMembersRoleViewer      AccountMembersRole = "viewer"
-	AccountMembersRoleContributor AccountMembersRole = "contributor"
-	AccountMembersRoleAdmin       AccountMembersRole = "admin"
-	AccountMembersRoleOwner       AccountMembersRole = "owner"
+	AccountMembersRoleViewer AccountMembersRole = "viewer"
+	AccountMembersRoleEditor AccountMembersRole = "editor"
+	AccountMembersRoleAdmin  AccountMembersRole = "admin"
+	AccountMembersRoleOwner  AccountMembersRole = "owner"
 )
 
 func (e *AccountMembersRole) Scan(src interface{}) error {

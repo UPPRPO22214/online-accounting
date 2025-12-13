@@ -6,11 +6,17 @@ import (
 )
 
 type Service struct {
-	AuthScv *AuthService
+	AuthScv        *AuthService
+	AccountScv     *AccountService
+	AccountMember  *AccountMemberService
+	TransactionScv *TransactionService
 }
 
 func New(repo *repository.Repository, tokens *tokens.JWTManager) *Service {
 	return &Service{
-		AuthScv: newAuthService(repo.UserRepo, tokens),
+		AuthScv:        newAuthService(repo, tokens),
+		AccountScv:     newAccountService(repo),
+		AccountMember: newAccountMemberService(repo),
+		TransactionScv: newTransactionService(repo),
 	}
 }

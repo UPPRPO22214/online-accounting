@@ -16,9 +16,9 @@ type AuthService struct {
 	tokens *tokens.JWTManager
 }
 
-func newAuthService(users *repository.UserRepository, tokens  *tokens.JWTManager) *AuthService {
+func newAuthService(repo *repository.Repository, tokens  *tokens.JWTManager) *AuthService {
 	return &AuthService{
-		users:  users,
+		users:  repo.UserRepo,
 		tokens: tokens,
 	}
 }

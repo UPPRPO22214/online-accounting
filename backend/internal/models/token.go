@@ -2,22 +2,12 @@ package models
 
 import "time"
 
-type Tokens struct {
+type Token struct {
 	AccessToken  string
-	RefreshToken string
 }
 
 type GenerateToken struct {
 	UserID    int
 	TokenHash string
 	ExpiresAt time.Time
-}
-
-type RefreshToken struct {
-	UserID      int
-	TokenHash   string
-	IsRefreshed bool
-	CreatedAt   time.Time
-	ExpiresAt   time.Time
-	RevokedAt   *time.Time
 }
