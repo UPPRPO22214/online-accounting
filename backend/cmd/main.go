@@ -28,7 +28,7 @@ import (
 func main() {
 	logger.Info().Msg("Initialize app dependencies...")
 
-	cfg, err := config.LoadEnv()
+	cfg, err := config.Load()
 	if err != nil {
 		logger.Fatal().Err(err).Send()
 	}
