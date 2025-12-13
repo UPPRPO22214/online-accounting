@@ -12,22 +12,29 @@ import (
 // AuthMiddleware проверяет JWT токен и кладёт user_id в context
 func AuthMiddleware(jwtManager *tokens.JWTManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Проверяем заголовок
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization header required"})
-			c.Abort()
-			return
+		var token string
+
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				token = parts[1]
+			}
 		}
 
-		// Формат: "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization format"})
-			c.Abort()
-			return
+		// Если есть и заголовок и кука - проверяем, что они совпадают
+		if cookieToken, err := c.Cookie("access_token"); err == nil {
+			if token != "" && token != cookieToken {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "token mismatch"})
+				c.Abort()
+				return
+			}
+			// Используем куку, если заголовка нет
+			if token == "" {
+				token = cookieToken
+			}
 		}
-
-		token := parts[1]
 
 		userID, err := jwtManager.Parse(token)
 		if err != nil {

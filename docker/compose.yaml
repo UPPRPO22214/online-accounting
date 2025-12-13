@@ -6,8 +6,8 @@ services:
     image: mysql:8.0-bookworm
     container_name: mysql-db
     environment:
-      - MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      - MYSQL_DATABASE: ${DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
     ports:
       - "${DB_PORT}:3306"
     volumes:

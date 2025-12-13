@@ -16,7 +16,7 @@ type JWTManager struct {
 func NewJWTManager(cfg config.JWT) *JWTManager {
 	return &JWTManager{
 		secret: []byte(cfg.Secret),
-		ttl:    cfg.ExpiresMinutes * time.Minute,
+		ttl:    cfg.Expires,
 	}
 }
 

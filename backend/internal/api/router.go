@@ -6,11 +6,22 @@ import (
 	"microservices/accounter/internal/tokens"
 	"microservices/accounter/internal/usecases"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowCredentials: true,
+	}))
+
+	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(services.AuthScv)

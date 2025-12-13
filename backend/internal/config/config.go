@@ -8,14 +8,14 @@ import (
 )
 
 type Database struct {
-	Host         string `env:"DB_HOST" env-default:"db"`
-	Port         uint16 `env:"DB_PORT" env-default:"5432"`
-	User         string `env:"DB_USER" env-default:"postgres"`
-	Password     string `env:"DB_PASSWORD" env-required:"true"`
-	Name         string `env:"DB_NAME" env-default:"postgres"`
-	TLS          bool   `env:"DB_TLS" env-default:"false"`
-	Connections  int    `env:"DB_POOL_CONNS" env-default:"25"`
-	ConnLifetime uint   `env:"DB_CONN_LIFETIME" env-default:"0"`
+	Host         string        `env:"DB_HOST" env-default:"db"`
+	Port         uint16        `env:"DB_PORT" env-default:"5432"`
+	User         string        `env:"DB_USER" env-default:"postgres"`
+	Password     string        `env:"DB_PASSWORD" env-required:"true"`
+	Name         string        `env:"DB_NAME" env-default:"postgres"`
+	TLS          bool          `env:"DB_TLS" env-default:"false"`
+	Connections  int           `env:"DB_POOL_CONNS" env-default:"25"`
+	ConnLifetime time.Duration `env:"DB_CONN_LIFETIME" env-default:"0"`
 }
 
 type Logger struct {
@@ -23,8 +23,8 @@ type Logger struct {
 }
 
 type JWT struct {
-	Secret         string        `env:"JWT_SECRET"`
-	ExpiresMinutes time.Duration `env:"JWT_EXPIRES_MINUTES"`
+	Secret  string        `env:"JWT_SECRET"`
+	Expires time.Duration `env:"JWT_EXPIRES"`
 }
 
 type Config struct {

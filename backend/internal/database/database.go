@@ -28,8 +28,8 @@ func New(cfg config.Database) (*Database, error) {
 
 	db.SetMaxOpenConns(cfg.Connections)
 	db.SetMaxIdleConns(cfg.Connections)
-	db.SetConnMaxLifetime(2 * time.Duration(cfg.ConnLifetime) * time.Minute)
-	db.SetConnMaxIdleTime(time.Duration(cfg.ConnLifetime) * time.Minute)
+	db.SetConnMaxLifetime(2 * cfg.ConnLifetime)
+	db.SetConnMaxIdleTime(cfg.ConnLifetime)
 
 	return &Database{db: db}, nil
 }
