@@ -77,6 +77,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Устанавливаем токен в куки
+	c.SetCookie(
+		"access_token",           // имя куки
+		token,                    // значение
+		1800,                     // время жизни в секундах (полчаса)
+		"/",                      // путь
+		"",                       // домен (пусто = текущий домен)
+		false,                    // secure (только HTTPS)
+		true,                     // httpOnly (недоступно из JS)
+	)
+
 	c.JSON(http.StatusCreated, TokenResponse{AccessToken: token})
 }
 
@@ -108,6 +119,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
+
+	// Устанавливаем токен в куки
+	c.SetCookie(
+		"access_token",           // имя куки
+		token,                    // значение
+		1800,                     // время жизни в секундах (полчаса)
+		"/",                      // путь
+		"",                       // домен (пусто = текущий домен)
+		false,                    // secure (только HTTPS)
+		true,                     // httpOnly (недоступно из JS)
+	)
 
 	c.JSON(http.StatusOK, TokenResponse{AccessToken: token})
 }

@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "microservices/accounter/docs"
 	"microservices/accounter/internal/api"
 	"microservices/accounter/internal/config"
 	"microservices/accounter/internal/database"
@@ -18,6 +19,12 @@ import (
 	"microservices/accounter/pkg/logger"
 )
 
+// @title Accounter API
+// @version 1.0
+// @description API для управления личными финансами
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	logger.Info().Msg("Initialize app dependencies...")
 
