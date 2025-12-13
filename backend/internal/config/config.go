@@ -23,8 +23,8 @@ type Logger struct {
 }
 
 type JWT struct {
-	Secret         string        `env:"JWT_SECRET"`
-	ExpiresMinutes time.Duration `env:"JWT_EXPIRES_MINUTES"`
+	Secret  string        `env:"JWT_SECRET"`
+	Expires time.Duration `env:"JWT_EXPIRES"`
 }
 
 type Config struct {
