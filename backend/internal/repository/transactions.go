@@ -42,6 +42,15 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, p *models
 	return int(id), nil
 }
 
+func (r *TransactionRepository) GetByID(ctx context.Context, id int32) (*query.Transaction, error) {
+	transaction, err := r.queries.GetTransactionByID(ctx, id)
+	if err != nil {
+		return  nil, err
+	}
+
+	return &transaction, nil
+}
+
 func (r *TransactionRepository) List(ctx context.Context, f *models.ListTransactionsFilter) ([]query.Transaction, error) {
 
 	var (

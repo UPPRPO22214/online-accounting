@@ -163,6 +163,28 @@ func (q *Queries) GetAccountMemberRole(ctx context.Context, arg GetAccountMember
 	return role, err
 }
 
+const getTransactionByID = `-- name: GetTransactionByID :one
+SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
+FROM transactions
+WHERE id = ?
+`
+
+func (q *Queries) GetTransactionByID(ctx context.Context, id int32) (Transaction, error) {
+	row := q.db.QueryRowContext(ctx, getTransactionByID, id)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.UserID,
+		&i.Title,
+		&i.Amount,
+		&i.OccurredAt,
+		&i.Category,
+		&i.IsPeriodic,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, password_hash
 FROM users

@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"microservices/accounter/internal/models"
@@ -55,6 +56,18 @@ func (s *TransactionService) Create(
 		Category:   cat,
 		IsPeriodic: isPeriodic,
 	})
+}
+
+func (s *TransactionService) GetByID(ctx context.Context, id int32) (*query.Transaction, error) {
+	transaction, err := s.transactions.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrTransactionNotFound
+		}
+		return nil, err
+	}
+
+	return transaction, nil
 }
 
 func (s *TransactionService) List(

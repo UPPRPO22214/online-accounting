@@ -63,6 +63,11 @@ INSERT INTO transactions (
 )
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
+-- name: GetTransactionByID :one
+SELECT *
+FROM transactions
+WHERE id = ?;
+
 -- name: ListTransactions :many
 SELECT *
 FROM transactions

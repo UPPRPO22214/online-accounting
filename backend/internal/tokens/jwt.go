@@ -3,6 +3,8 @@ package tokens
 import (
 	"time"
 
+	"microservices/accounter/internal/config"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -11,10 +13,10 @@ type JWTManager struct {
 	ttl    time.Duration
 }
 
-func NewJWTManager(secret string, ttl time.Duration) *JWTManager {
+func NewJWTManager(cfg config.JWT) *JWTManager {
 	return &JWTManager{
-		secret: []byte(secret),
-		ttl:    ttl,
+		secret: []byte(cfg.Secret),
+		ttl:    cfg.ExpiresMinutes * time.Minute,
 	}
 }
 

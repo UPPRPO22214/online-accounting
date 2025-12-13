@@ -11,7 +11,11 @@ var (
 
 // Account
 var (
-	ErrAccountNotFound   = errors.New("account not found")
-	ErrForbidden        = errors.New("forbidden")
+	ErrAccountNotFound = errors.New("account not found")
+	ErrForbidden       = errors.New("forbidden")
 )
 
+// Transaction
+var (
+	ErrTransactionNotFound = errors.New("transaction not found")
+)
