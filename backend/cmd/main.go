@@ -9,6 +9,7 @@ import (
 
 	"microservices/auth/internal/config"
 	"microservices/auth/internal/database"
+	"microservices/auth/internal/repository"
 	"microservices/auth/pkg/logger"
 )
 
@@ -35,13 +36,9 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to open connection to database")
 	}
 
-	// TODO: Repo connect with MySQL
+	repo := repository.New(db.DB())
 
-	// TODO: Service for auth users
-
-	// TODO: Transport, proto files for gRPC
-
-	// TODO: Start gRPC server
+	// TODO: everything
 
 	<-ctx.Done()
 	logger.Info().Msg("Received signal. Starting graceful shutdown...")

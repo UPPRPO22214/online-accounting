@@ -2,6 +2,11 @@ package models
 
 import "time"
 
+type Tokens struct {
+	AccessToken  string
+	RefreshToken string
+}
+
 type GenerateToken struct {
 	UserID    int
 	TokenHash string
