@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"microservices/auth/internal/repository/query"
+	"microservices/accounter/internal/repository/query"
 )
 
 type Repository struct {

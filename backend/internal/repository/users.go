@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"microservices/auth/internal/models"
-	"microservices/auth/internal/repository/query"
+	"microservices/accounter/internal/models"
+	"microservices/accounter/internal/repository/query"
 )
 
 type UserRepository struct {

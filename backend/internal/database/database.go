@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"microservices/auth/internal/config"
+	"microservices/accounter/internal/config"
 
 	_ "github.com/go-sql-driver/mysql"
 )

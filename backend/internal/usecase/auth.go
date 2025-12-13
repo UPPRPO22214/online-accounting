@@ -7,8 +7,8 @@ import (
 	"encoding/hex"
 	"time"
 
-	"microservices/auth/internal/models"
-	"microservices/auth/internal/repository"
+	"microservices/accounter/internal/models"
+	"microservices/accounter/internal/repository"
 )
 
 type PasswordHasher interface {

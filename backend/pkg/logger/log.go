@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"microservices/auth/internal/config"
+	"microservices/accounter/internal/config"
 
 	"github.com/rs/zerolog"
 )

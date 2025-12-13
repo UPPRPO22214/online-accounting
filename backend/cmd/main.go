@@ -7,10 +7,10 @@ import (
 	"syscall"
 	"time"
 
-	"microservices/auth/internal/config"
-	"microservices/auth/internal/database"
-	"microservices/auth/internal/repository"
-	"microservices/auth/pkg/logger"
+	"microservices/accounter/internal/config"
+	"microservices/accounter/internal/database"
+	"microservices/accounter/internal/repository"
+	"microservices/accounter/pkg/logger"
 )
 
 func main() {
