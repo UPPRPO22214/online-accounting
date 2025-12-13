@@ -18,7 +18,7 @@ pipeline {
                     }
 
                     steps {
-                        sh 'cd backend/auth && go build -o main cmd/service/main.go'
+                        sh 'cd backend && go build -o main cmd/main.go'
                     }
                 }
 
@@ -40,14 +40,14 @@ pipeline {
         stage('Sonar Analysis') {
             agent {
                 docker {
-                    image 'sonarsource/sonar-scanner-cli:latest' 
+                    image 'sonarsource/sonar-scanner-cli:latest'
                 }
             }
-            
+
             steps {
                 script {
                     sh """
-                        cd backend && 
+                        cd backend &&
                         sonar-scanner \\
                         -Dsonar.projectKey=backend-auth \\
                         -Dsonar.sources=auth \\
@@ -58,7 +58,7 @@ pipeline {
 
                 script {
                     sh """
-                        cd frontend && 
+                        cd frontend &&
                         sonar-scanner \\
                         -Dsonar.projectKey=frontend \\
                         -Dsonar.sources=src \\
