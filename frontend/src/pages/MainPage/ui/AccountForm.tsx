@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { HTMLAttributes } from 'react';
+import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 
 import { Button, ErrorMessage } from '@/shared/ui';
@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createAccount } from '@/entities/Account';
-import { useAuthStore } from '@/entities/User';
+import { getMe, type User } from '@/entities/User';
 
 type AccountFormProps = HTMLAttributes<HTMLDivElement>;
 
@@ -21,20 +21,26 @@ const accountZodSchema = z.object({
 type AccountCreate = z.infer<typeof accountZodSchema>;
 
 export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
-  const user = useAuthStore((state) => state.user);
+  const [user, setUser] = useState<User>();
+  useEffect(() => {
+    setUser(getMe());
+  }, []);
 
   const { register, handleSubmit, formState } = useForm<AccountCreate>({
     resolver: zodResolver(accountZodSchema),
   });
 
+  if (!user) return <div>Loading...</div>;
+
   return (
     <div className={clsx('border p-2', className)}>
       <form
         onSubmit={handleSubmit((value) => {
-          createAccount(user.id, {
+          createAccount(user, {
             ...value,
             id: crypto.randomUUID(),
           });
+          location.reload(); // Убрать все такие релоады, когда будет реальное апи
         })}
         className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2"
       >

@@ -7,8 +7,8 @@ import {
   Label,
   Select,
   Transition,
+  Checkbox,
 } from '@headlessui/react';
-import { Checkbox } from '@headlessui/react';
 import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams } from 'wouter';
@@ -22,8 +22,16 @@ import {
   deleteOperation,
   editOperation,
 } from '@/entities/Operation/api';
-import { operationSchema, type OperationFormType } from '../types';
+import {
+  operationSchema,
+  type OperationFormType,
+} from '../types/operationFormTypes';
 import { periodsLabels, type Operation } from '@/entities/Operation/types';
+import {
+  checkRole,
+  getMyRole,
+  type AccountMember,
+} from '@/entities/AccountMember';
 
 export const OperationDialogWindow: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -57,6 +65,11 @@ export const OperationDialogWindow: React.FC = () => {
   });
   const [isPeriodic, setIsPeriodic] = useState(false);
 
+  const [meMember, setMeMember] = useState<AccountMember>();
+  useEffect(() => {
+    setMeMember(getMyRole(accountId));
+  }, [accountId]);
+
   return (
     <Dialog
       as="div"
@@ -79,7 +92,7 @@ export const OperationDialogWindow: React.FC = () => {
             'transition-base ease-out data-closed:transform-[scale(95%)] data-closed:opacity-0',
           )}
         >
-          {mode === 'show' ? (
+          {mode === 'show' || !checkRole(meMember?.role, 'contributor') ? (
             <>
               <DialogTitle as="h3" className="text-lg font-medium">
                 {operation.description}
@@ -102,19 +115,23 @@ export const OperationDialogWindow: React.FC = () => {
                 <Button className="px-2" onClick={close}>
                   Закрыть
                 </Button>
-                <Button className="px-2" onClick={() => setMode('edit')}>
-                  Изменить
-                </Button>
-                <Button
-                  className="px-2"
-                  onClick={() => {
-                    deleteOperation(operation.id, accountId);
-                    close();
-                    location.reload();
-                  }}
-                >
-                  Удалить
-                </Button>
+                {checkRole(meMember?.role, 'contributor') && (
+                  <>
+                    <Button className="px-2" onClick={() => setMode('edit')}>
+                      Изменить
+                    </Button>
+                    <Button
+                      className="px-2"
+                      onClick={() => {
+                        deleteOperation(operation.id, accountId);
+                        close();
+                        location.reload();
+                      }}
+                    >
+                      Удалить
+                    </Button>
+                  </>
+                )}
               </div>
             </>
           ) : (
@@ -141,7 +158,7 @@ export const OperationDialogWindow: React.FC = () => {
                 if (mode === 'create') {
                   createOperation(accountId, newOperation);
                 } else {
-                  editOperation(newOperation);
+                  editOperation(accountId, newOperation);
                 }
                 close();
                 location.reload();
@@ -169,6 +186,7 @@ export const OperationDialogWindow: React.FC = () => {
                 <Label>Сумма</Label>
                 <input
                   placeholder="Сумма операции"
+                  type="number"
                   className={clsx(
                     'font-mono p-1 bg-gray-100 transition-base',
                     amount > 0 && 'bg-green-300',

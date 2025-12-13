@@ -1,5 +1,5 @@
 import type { Operation } from '@/entities/Operation';
-import { getChartDataset } from './ChartDatasets';
+import { getChartDataset } from './chartDatasetsTypes';
 import { describe, expect, test } from 'vitest';
 
 describe('Chart datasets accumulated tests', () => {

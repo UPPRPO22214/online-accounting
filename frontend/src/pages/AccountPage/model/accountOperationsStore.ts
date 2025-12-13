@@ -1,6 +1,9 @@
-import type { Operation } from '@/entities/Operation';
+import { type Operation, sortOperations } from '@/entities/Operation';
 import { createWrappedStore } from '@/shared/store';
-import { getChartDataset, type ChartsDatasets } from '../types';
+import {
+  getChartDataset,
+  type ChartsDatasets,
+} from '../types/chartDatasetsTypes';
 
 type AccountOperationsStoreType = {
   operations: Operation[];
@@ -31,13 +34,13 @@ export const useAccountOperationsStore =
       set: (operations) =>
         mutate((state) => {
           state.operations.length = 0;
-          state.operations = operations;
-          state.totalAmount = operations
+          state.operations = sortOperations(operations);
+          state.totalAmount = state.operations
             .map((op) => op.amount)
             .reduce((acc, op) => acc + op, 0);
-          const accDataset = getChartDataset(operations, 'accumulate');
+          const accDataset = getChartDataset(state.operations, 'accumulate');
           if (accDataset) state.chartsDatasets.accumulate = accDataset;
-          const sepDataset = getChartDataset(operations, 'separate');
+          const sepDataset = getChartDataset(state.operations, 'separate');
           if (sepDataset) state.chartsDatasets.separate = sepDataset;
         }),
     }),

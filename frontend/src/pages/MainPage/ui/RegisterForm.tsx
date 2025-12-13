@@ -5,14 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button, ErrorMessage } from '@/shared/ui';
-import { useAuthStore } from '@/entities/User';
+import { register as regsiterRequest } from '@/entities/User';
 import { registerZodSchema, type RegisterType } from '../types';
 
 type RegisterFormProps = HTMLAttributes<HTMLDivElement>;
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
-  const login = useAuthStore((state) => state.login);
-
   const { register, handleSubmit, formState } = useForm<RegisterType>({
     resolver: zodResolver(registerZodSchema),
   });
@@ -21,9 +19,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
     <div className={clsx('border p-2', className)}>
       <h2 className="text-2xl mb-2">Регистрация</h2>
       <form
-        onSubmit={handleSubmit((loginValues) => {
-          console.log(loginValues);
-          login();
+        onSubmit={handleSubmit((registerValues) => {
+          regsiterRequest({ ...registerValues });
+          location.reload(); // Убрать все такие релоады, когда будет реальное апи
         })}
         className="grid grid-cols-1 gap-4"
       >

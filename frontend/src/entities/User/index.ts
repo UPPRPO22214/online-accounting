@@ -1,3 +1,3 @@
-export { useAuthStore } from './model';
+export { getUsers, getMe, register, login, logout } from './api';
 
 export type { User } from './types';
