@@ -1,5 +1,5 @@
 networks:
-  auth:
+  accounter:
 
 services:
   db:
@@ -13,10 +13,10 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - auth
+      - accounter
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  
-      interval: 30s  
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
       timeout: 10s
       retries: 3
       start_period: 80s
@@ -26,7 +26,7 @@ services:
     image: migrate/migrate:latest
     container_name: migrate-db
     volumes:
-      - ../backend/auth/migrations:/migrations
+      - ../backend/migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database",
@@ -37,25 +37,25 @@ services:
       db:
         condition: service_healthy
     networks:
-      - auth
-    restart: on-failure:5 
+      - accounter
+    restart: on-failure:5
 
-  auth:
+  backend:
     build:
       context: ../
-      dockerfile: docker/Dockerfile.auth.dev
-    image: accounting-auth
+      dockerfile: docker/Dockerfile.back.dev
+    image: accounter
     env_file: .env
     ports:
       - "8080:8080"
     depends_on:
-      db: 
+      db:
         condition: service_healthy
-      migrate: 
+      migrate:
         condition: service_completed_successfully
     networks:
-      - auth
-  
+      - accounter
+
   frontend:
     build:
       context: ../

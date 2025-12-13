@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -21,14 +22,15 @@ type Logger struct {
 	LogLevel string `env:"LOG_LEVEL" env-default:"debug"`
 }
 
-type Server struct {
-	Host string `env:"HOST"`
-	Port string `env:"PORT"`
+type JWT struct {
+	Secret         string        `env:"JWT_SECRET"`
+	ExpiresMinutes time.Duration `env:"JWT_EXPIRES_MINUTES"`
 }
 
 type Config struct {
 	Database
 	Logger
+	JWT
 }
 
 func Load() (*Config, error) {
