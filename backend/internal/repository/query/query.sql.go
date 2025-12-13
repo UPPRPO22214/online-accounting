@@ -8,8 +8,25 @@ package query
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 )
+
+const addAccountMember = `-- name: AddAccountMember :exec
+INSERT INTO account_members (account_id, user_id, role)
+VALUES (?, ?, ?)
+`
+
+type AddAccountMemberParams struct {
+	AccountID int32
+	UserID    int32
+	Role      AccountMembersRole
+}
+
+func (q *Queries) AddAccountMember(ctx context.Context, arg AddAccountMemberParams) error {
+	_, err := q.db.ExecContext(ctx, addAccountMember, arg.AccountID, arg.UserID, arg.Role)
+	return err
+}
 
 const checkUserByID = `-- name: CheckUserByID :one
 SELECT COUNT(*) = 1 AS user_exists
@@ -22,6 +39,56 @@ func (q *Queries) CheckUserByID(ctx context.Context, id int32) (bool, error) {
 	var user_exists bool
 	err := row.Scan(&user_exists)
 	return user_exists, err
+}
+
+const createAccount = `-- name: CreateAccount :execresult
+INSERT INTO accounts (name, description, owner_id)
+VALUES (?, ?, ?)
+`
+
+type CreateAccountParams struct {
+	Name        string
+	Description sql.NullString
+	OwnerID     int32
+}
+
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createAccount, arg.Name, arg.Description, arg.OwnerID)
+}
+
+const createTransaction = `-- name: CreateTransaction :execresult
+INSERT INTO transactions (
+    account_id,
+    user_id,
+    title,
+    amount,
+    occurred_at,
+    category,
+    is_periodic
+)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+`
+
+type CreateTransactionParams struct {
+	AccountID  int32
+	UserID     int32
+	Title      string
+	Amount     string
+	OccurredAt time.Time
+	Category   sql.NullString
+	IsPeriodic bool
+}
+
+func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createTransaction,
+		arg.AccountID,
+		arg.UserID,
+		arg.Title,
+		arg.Amount,
+		arg.OccurredAt,
+		arg.Category,
+		arg.IsPeriodic,
+	)
 }
 
 const createUser = `-- name: CreateUser :execresult
@@ -38,45 +105,62 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 	return q.db.ExecContext(ctx, createUser, arg.Email, arg.PasswordHash)
 }
 
-const generateRefreshToken = `-- name: GenerateRefreshToken :exec
-INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-VALUES (?, ?, ?)
+const deleteAccountByID = `-- name: DeleteAccountByID :exec
+DELETE FROM accounts
+WHERE id = ?
 `
 
-type GenerateRefreshTokenParams struct {
-	UserID    int32
-	TokenHash string
-	ExpiresAt time.Time
-}
-
-func (q *Queries) GenerateRefreshToken(ctx context.Context, arg GenerateRefreshTokenParams) error {
-	_, err := q.db.ExecContext(ctx, generateRefreshToken, arg.UserID, arg.TokenHash, arg.ExpiresAt)
+func (q *Queries) DeleteAccountByID(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteAccountByID, id)
 	return err
 }
 
-const getRefreshToken = `-- name: GetRefreshToken :one
-SELECT user_id, token_hash, is_refreshed, created_at, expires_at, revoked_at FROM refresh_tokens
-WHERE user_id = ? AND token_hash = ?
+const deleteTransactionByID = `-- name: DeleteTransactionByID :exec
+DELETE FROM transactions
+WHERE id = ?
+`
+
+func (q *Queries) DeleteTransactionByID(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteTransactionByID, id)
+	return err
+}
+
+const getAccountByID = `-- name: GetAccountByID :one
+SELECT id, name, description, owner_id
+FROM accounts
+WHERE id = ?
 LIMIT 1
 `
 
-type GetRefreshTokenParams struct {
-	UserID    int32
-	TokenHash string
-}
-
-func (q *Queries) GetRefreshToken(ctx context.Context, arg GetRefreshTokenParams) (RefreshToken, error) {
-	row := q.db.QueryRowContext(ctx, getRefreshToken, arg.UserID, arg.TokenHash)
-	var i RefreshToken
+func (q *Queries) GetAccountByID(ctx context.Context, id int32) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccountByID, id)
+	var i Account
 	err := row.Scan(
-		&i.UserID,
-		&i.TokenHash,
-		&i.IsRefreshed,
-		&i.CreatedAt,
-		&i.ExpiresAt,
-		&i.RevokedAt,
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.OwnerID,
 	)
 	return i, err
+}
+
+const getAccountMemberRole = `-- name: GetAccountMemberRole :one
+SELECT role
+FROM account_members
+WHERE account_id = ? AND user_id = ?
+LIMIT 1
+`
+
+type GetAccountMemberRoleParams struct {
+	AccountID int32
+	UserID    int32
+}
+
+func (q *Queries) GetAccountMemberRole(ctx context.Context, arg GetAccountMemberRoleParams) (AccountMembersRole, error) {
+	row := q.db.QueryRowContext(ctx, getAccountMemberRole, arg.AccountID, arg.UserID)
+	var role AccountMembersRole
+	err := row.Scan(&role)
+	return role, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -93,19 +177,124 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
-const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
-UPDATE refresh_tokens
-SET revoked_at = NOW()
-WHERE user_id = ? AND token_hash = ?
+const listTransactions = `-- name: ListTransactions :many
+SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
+FROM transactions
+WHERE account_id = ?
+
+  AND (? IS NULL OR occurred_at >= ?)
+  AND (? IS NULL OR occurred_at <= ?)
+
+  AND (? IS NULL OR is_periodic = ?)
+
+  AND (
+        ? IS NULL
+        OR (? = 'income' AND amount > 0)
+        OR (? = 'expense' AND amount < 0)
+      )
+
+  AND (? IS NULL OR category IN (/*SLICE:categories*/?))
+
+ORDER BY occurred_at DESC
 `
 
-type RevokeRefreshTokenParams struct {
-	UserID    int32
-	TokenHash string
+type ListTransactionsParams struct {
+	AccountID    int32
+	Column2      interface{}
+	OccurredAt   time.Time
+	Column4      interface{}
+	OccurredAt_2 time.Time
+	Column6      interface{}
+	IsPeriodic   bool
+	Column8      interface{}
+	Column9      interface{}
+	Column10     interface{}
+	Column11     interface{}
+	Categories   []sql.NullString
 }
 
-func (q *Queries) RevokeRefreshToken(ctx context.Context, arg RevokeRefreshTokenParams) error {
-	_, err := q.db.ExecContext(ctx, revokeRefreshToken, arg.UserID, arg.TokenHash)
+func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error) {
+	query := listTransactions
+	var queryParams []interface{}
+	queryParams = append(queryParams, arg.AccountID)
+	queryParams = append(queryParams, arg.Column2)
+	queryParams = append(queryParams, arg.OccurredAt)
+	queryParams = append(queryParams, arg.Column4)
+	queryParams = append(queryParams, arg.OccurredAt_2)
+	queryParams = append(queryParams, arg.Column6)
+	queryParams = append(queryParams, arg.IsPeriodic)
+	queryParams = append(queryParams, arg.Column8)
+	queryParams = append(queryParams, arg.Column9)
+	queryParams = append(queryParams, arg.Column10)
+	queryParams = append(queryParams, arg.Column11)
+	if len(arg.Categories) > 0 {
+		for _, v := range arg.Categories {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:categories*/?", strings.Repeat(",?", len(arg.Categories))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:categories*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.UserID,
+			&i.Title,
+			&i.Amount,
+			&i.OccurredAt,
+			&i.Category,
+			&i.IsPeriodic,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const removeAccountMember = `-- name: RemoveAccountMember :exec
+DELETE FROM account_members
+WHERE account_id = ? AND user_id = ?
+`
+
+type RemoveAccountMemberParams struct {
+	AccountID int32
+	UserID    int32
+}
+
+func (q *Queries) RemoveAccountMember(ctx context.Context, arg RemoveAccountMemberParams) error {
+	_, err := q.db.ExecContext(ctx, removeAccountMember, arg.AccountID, arg.UserID)
+	return err
+}
+
+const updateAccountMemberRole = `-- name: UpdateAccountMemberRole :exec
+UPDATE account_members
+SET role = ?
+WHERE account_id = ? AND user_id = ?
+`
+
+type UpdateAccountMemberRoleParams struct {
+	Role      AccountMembersRole
+	AccountID int32
+	UserID    int32
+}
+
+func (q *Queries) UpdateAccountMemberRole(ctx context.Context, arg UpdateAccountMemberRoleParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountMemberRole, arg.Role, arg.AccountID, arg.UserID)
 	return err
 }
 
@@ -122,22 +311,4 @@ type UpdateUserPasswordParams struct {
 
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateUserPassword, arg.PasswordHash, arg.ID)
-}
-
-const useValidRefreshToken = `-- name: UseValidRefreshToken :execresult
-UPDATE refresh_tokens
-SET is_refreshed = TRUE
-WHERE user_id = ?
-      AND token_hash = ?
-      AND is_refreshed = FALSE
-      AND expires_at > NOW()
-`
-
-type UseValidRefreshTokenParams struct {
-	UserID    int32
-	TokenHash string
-}
-
-func (q *Queries) UseValidRefreshToken(ctx context.Context, arg UseValidRefreshTokenParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, useValidRefreshToken, arg.UserID, arg.TokenHash)
 }

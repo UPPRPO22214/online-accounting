@@ -6,16 +6,77 @@ package query
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
 
-type RefreshToken struct {
-	UserID      int32
-	TokenHash   string
-	IsRefreshed bool
-	CreatedAt   time.Time
-	ExpiresAt   time.Time
-	RevokedAt   sql.NullTime
+type AccountMembersRole string
+
+const (
+	AccountMembersRoleViewer      AccountMembersRole = "viewer"
+	AccountMembersRoleContributor AccountMembersRole = "contributor"
+	AccountMembersRoleAdmin       AccountMembersRole = "admin"
+	AccountMembersRoleOwner       AccountMembersRole = "owner"
+)
+
+func (e *AccountMembersRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AccountMembersRole(s)
+	case string:
+		*e = AccountMembersRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AccountMembersRole: %T", src)
+	}
+	return nil
+}
+
+type NullAccountMembersRole struct {
+	AccountMembersRole AccountMembersRole
+	Valid              bool // Valid is true if AccountMembersRole is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAccountMembersRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.AccountMembersRole, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AccountMembersRole.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAccountMembersRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AccountMembersRole), nil
+}
+
+type Account struct {
+	ID          int32
+	Name        string
+	Description sql.NullString
+	OwnerID     int32
+}
+
+type AccountMember struct {
+	AccountID int32
+	UserID    int32
+	Role      AccountMembersRole
+}
+
+type Transaction struct {
+	ID         int32
+	AccountID  int32
+	UserID     int32
+	Title      string
+	Amount     string
+	OccurredAt time.Time
+	Category   sql.NullString
+	IsPeriodic bool
 }
 
 type User struct {
