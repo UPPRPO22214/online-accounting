@@ -1,46 +1,42 @@
 package tokens
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTManager struct {
-	secretKey  []byte
-	accessTTL  time.Duration
-	refreshTTL time.Duration
+	secret []byte
+	ttl    time.Duration
 }
 
-func NewJWTManager(secret string, accessTTL, refreshTTL time.Duration) *JWTManager {
+func NewJWTManager(secret string, ttl time.Duration) *JWTManager {
 	return &JWTManager{
-		secretKey:  []byte(secret),
-		accessTTL:  accessTTL,
-		refreshTTL: refreshTTL,
+		secret: []byte(secret),
+		ttl:    ttl,
 	}
 }
 
-func (m *JWTManager) GenerateAccessToken(userID int) (string, error) {
+func (m *JWTManager) Generate(userID int) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": userID,
+		"exp": time.Now().Add(m.ttl).Unix(),
 		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(m.accessTTL).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(m.secretKey)
+	return token.SignedString(m.secret)
 }
 
-func (m *JWTManager) GenerateRefreshToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
+func (m *JWTManager) Parse(tokenStr string) (int, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
+		return m.secret, nil
+	})
+	if err != nil || !token.Valid {
+		return 0, err
 	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
-}
 
-func (m *JWTManager) RefreshTTL() time.Duration {
-	return m.refreshTTL
+	claims := token.Claims.(jwt.MapClaims)
+	return int(claims["sub"].(float64)), nil
 }

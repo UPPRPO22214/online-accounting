@@ -10,6 +10,8 @@ import (
 	"microservices/accounter/internal/config"
 	"microservices/accounter/internal/database"
 	"microservices/accounter/internal/repository"
+	"microservices/accounter/internal/tokens"
+	"microservices/accounter/internal/usecases"
 	"microservices/accounter/pkg/logger"
 )
 
@@ -38,7 +40,9 @@ func main() {
 
 	repo := repository.New(db.DB())
 
-	// TODO: everything
+	jwt := tokens.NewJWTManager("secret", time.Hour)
+
+	service := usecases.New(repo, jwt)
 
 	<-ctx.Done()
 	logger.Info().Msg("Received signal. Starting graceful shutdown...")
