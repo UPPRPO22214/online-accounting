@@ -49,8 +49,8 @@ pipeline {
                     sh """
                         cd backend &&
                         sonar-scanner \\
-                        -Dsonar.projectKey=backend-auth \\
-                        -Dsonar.sources=auth \\
+                        -Dsonar.projectKey=backend \\
+                        -Dsonar.sources=. \\
                         -Dsonar.host.url=${SONARQUBE_URL} \\
                         -Dsonar.login=${SONARQUBE_TOKEN}
                     """
