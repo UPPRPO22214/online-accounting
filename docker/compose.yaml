@@ -15,8 +15,8 @@ services:
     networks:
       - auth
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  
-      interval: 30s  
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
       timeout: 10s
       retries: 3
       start_period: 80s
@@ -38,9 +38,9 @@ services:
         condition: service_healthy
     networks:
       - auth
-    restart: on-failure:5 
+    restart: on-failure:5
 
-  auth:
+  backend:
     build:
       context: ../
       dockerfile: docker/Dockerfile.auth.dev
@@ -49,13 +49,13 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      db: 
+      db:
         condition: service_healthy
-      migrate: 
+      migrate:
         condition: service_completed_successfully
     networks:
       - auth
-  
+
   frontend:
     build:
       context: ../
