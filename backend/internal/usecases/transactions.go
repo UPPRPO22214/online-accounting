@@ -30,21 +30,16 @@ func (s *TransactionService) Create(
 	title string,
 	amount string,
 	occurredAt time.Time,
-	category *string,
 	isPeriodic bool,
 ) (int, error) {
 
-	role, err := s.requireViewer(ctx, accountID, userID)
+	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
 		return 0, err
 	}
+
 	if role == query.AccountMembersRoleViewer {
 		return 0, ErrForbidden
-	}
-
-	var cat sql.NullString
-	if category != nil {
-		cat = sql.NullString{String: *category, Valid: true}
 	}
 
 	return s.transactions.CreateTransaction(ctx, &models.CreateTransactionParams{
@@ -53,7 +48,6 @@ func (s *TransactionService) Create(
 		Title:      title,
 		Amount:     amount,
 		OccurredAt: occurredAt,
-		Category:   cat,
 		IsPeriodic: isPeriodic,
 	})
 }
@@ -77,7 +71,7 @@ func (s *TransactionService) List(
 	params *models.ListTransactionsFilter,
 ) ([]query.Transaction, error) {
 
-	if _, err := s.requireViewer(ctx, accountID, userID); err != nil {
+	if err := s.members.IsMember(ctx, accountID, userID); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +86,7 @@ func (s *TransactionService) Delete(
 	transactionID int,
 ) error {
 
-	role, err := s.requireViewer(ctx, accountID, userID)
+	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
 		return err
 	}
@@ -106,18 +100,4 @@ func (s *TransactionService) Delete(
 	}
 
 	return s.transactions.DeleteByID(ctx, transactionID)
-}
-
-func (s *TransactionService) requireViewer(
-	ctx context.Context,
-	accountID int,
-	userID int,
-) (query.AccountMembersRole, error) {
-
-	role, err := s.members.GetMemberRole(ctx, accountID, userID)
-	if err != nil {
-		return "", ErrForbidden
-	}
-
-	return role, nil
 }

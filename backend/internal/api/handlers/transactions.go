@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"microservices/accounter/internal/models"
 	"microservices/accounter/internal/usecases"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +23,6 @@ type CreateTransactionRequest struct {
 	Title      string  `json:"title" binding:"required" example:"Покупка продуктов"`
 	Amount     string  `json:"amount" binding:"required" example:"-1500.50"`
 	OccurredAt *string `json:"occurred_at" example:"2024-12-13T14:30:00Z"`
-	Category   *string `json:"category" example:"Еда"`
 	IsPeriodic bool    `json:"is_periodic" example:"false"`
 }
 
@@ -36,7 +34,6 @@ type TransactionResponse struct {
 	Title      string    `json:"title" example:"Покупка продуктов"`
 	Amount     string    `json:"amount" example:"-1500.50"`
 	OccurredAt time.Time `json:"occurred_at" example:"2024-12-13T14:30:00Z"`
-	Category   *string   `json:"category" example:"Еда"`
 	IsPeriodic bool      `json:"is_periodic" example:"false"`
 }
 
@@ -87,7 +84,6 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		req.Title,
 		req.Amount,
 		occurredAt,
-		req.Category,
 		req.IsPeriodic,
 	)
 	if err != nil {
@@ -104,7 +100,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 
 // ListTransactions godoc
 // @Summary      Список транзакций с фильтрацией
-// @Description  Возвращает список транзакций счёта с возможностью фильтрации. Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to (временной диапазон в RFC3339), type (income/expense для доходов/расходов), is_periodic (только периодические), categories (массив категорий). Все фильтры опциональны и могут комбинироваться.
+// @Description  Возвращает список транзакций счёта с возможностью фильтрации. Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to (временной диапазон в RFC3339), type (income/expense для доходов/расходов), is_periodic (только периодические), category (категория). Все фильтры опциональны и могут комбинироваться. Возвращаются все транзакции, соответствующие фильтрам.
 // @Tags         transactions
 // @Produce      json
 // @Security     BearerAuth
@@ -113,7 +109,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 // @Param        date_to query string false "Конечная дата (RFC3339). Включает транзакции до этой даты включительно" example(2024-12-31T23:59:59Z)
 // @Param        is_periodic query boolean false "Фильтр по периодическим транзакциям. true - только периодические, false - только разовые"
 // @Param        type query string false "Фильтр по типу транзакции" Enums(income, expense)
-// @Param        categories query []string false "Массив категорий для фильтрации. Можно указать несколько через &categories=Еда&categories=Транспорт" collectionFormat(multi)
+// @Param        category query string false "Категория для фильтрации" example("Еда")
 // @Success      200 {array} TransactionResponse "Список транзакций, соответствующих фильтрам. Пустой массив если транзакций нет"
 // @Failure      400 {object} ErrorResponse "Неверные параметры фильтрации. Проверьте формат дат и значение type"
 // @Failure      401 {object} ErrorResponse "Отсутствует или невалидный JWT токен"
@@ -121,93 +117,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при получении транзакций"
 // @Router       /accounts/{id}/transactions [get]
 func (h *TransactionHandler) ListTransactions(c *gin.Context) {
-	userID, _ := c.Get("user_id")
 
-	accountID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account id"})
-		return
-	}
-
-	filter := &models.ListTransactionsFilter{
-		AccountID: accountID,
-	}
-
-	// date_from
-	if dateFromStr := c.Query("date_from"); dateFromStr != "" {
-		parsed, err := time.Parse(time.RFC3339, dateFromStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_from format"})
-			return
-		}
-		filter.DateFrom = &parsed
-	}
-
-	// date_to
-	if dateToStr := c.Query("date_to"); dateToStr != "" {
-		parsed, err := time.Parse(time.RFC3339, dateToStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_to format"})
-			return
-		}
-		filter.DateTo = &parsed
-	}
-
-	// is_periodic
-	if isPeriodicStr := c.Query("is_periodic"); isPeriodicStr != "" {
-		isPeriodic := isPeriodicStr == "true"
-		filter.IsPeriodic = &isPeriodic
-	}
-
-	// type (income/expense)
-	if typeStr := c.Query("type"); typeStr != "" {
-		if typeStr != "income" && typeStr != "expense" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "type must be 'income' or 'expense'"})
-			return
-		}
-		filter.Type = &typeStr
-	}
-
-	// categories
-	if categoriesStr := c.Query("categories"); categoriesStr != "" {
-		filter.Categories = c.QueryArray("categories")
-	}
-
-	transactions, err := h.service.List(
-		c.Request.Context(),
-		accountID,
-		userID.(int),
-		filter,
-	)
-	if err != nil {
-		if err == usecases.ErrForbidden {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
-	}
-
-	response := make([]TransactionResponse, len(transactions))
-	for i, t := range transactions {
-		var category *string
-		if t.Category.Valid {
-			category = &t.Category.String
-		}
-
-		response[i] = TransactionResponse{
-			ID:         t.ID,
-			AccountID:  t.AccountID,
-			UserID:     t.UserID,
-			Title:      t.Title,
-			Amount:     t.Amount,
-			OccurredAt: t.OccurredAt,
-			Category:   category,
-			IsPeriodic: t.IsPeriodic,
-		}
-	}
-
-	c.JSON(http.StatusOK, response)
 }
 
 // DeleteTransaction godoc

@@ -75,7 +75,6 @@ type Transaction struct {
 	Title      string
 	Amount     string
 	OccurredAt time.Time
-	Category   sql.NullString
 	IsPeriodic bool
 }
 

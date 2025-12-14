@@ -34,6 +34,7 @@ func (s *AccountService) CreateAccount(ctx context.Context, userID int, name str
 		userID,
 		query.AccountMembersRoleOwner,
 	)
+
 	if err != nil {
 		return 0, err
 	}
@@ -58,9 +59,7 @@ func (s *AccountService) ListForUser(ctx context.Context, userID int) ([]query.L
 }
 
 func (s *AccountService) ListMembers(ctx context.Context, accountID int, userID int) ([]query.ListAccountMembersRow, error) {
-	// Проверяем, что пользователь вообще участник счёта
-	_, err := s.members.GetMemberRole(ctx, accountID, userID)
-	if err != nil {
+	if err := s.members.IsMember(ctx, accountID, userID); err != nil {
 		return nil, ErrForbidden
 	}
 

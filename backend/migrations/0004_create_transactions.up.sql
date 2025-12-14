@@ -7,7 +7,6 @@ CREATE TABLE transactions (
     amount        DECIMAL(12,2) NOT NULL,
     occurred_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    category      VARCHAR(64),
     is_periodic   BOOLEAN NOT NULL DEFAULT FALSE,
 
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,

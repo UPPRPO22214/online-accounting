@@ -8,7 +8,6 @@ package query
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 )
 
@@ -63,10 +62,9 @@ INSERT INTO transactions (
     title,
     amount,
     occurred_at,
-    category,
     is_periodic
 )
-VALUES (?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateTransactionParams struct {
@@ -75,7 +73,6 @@ type CreateTransactionParams struct {
 	Title      string
 	Amount     string
 	OccurredAt time.Time
-	Category   sql.NullString
 	IsPeriodic bool
 }
 
@@ -86,7 +83,6 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.Title,
 		arg.Amount,
 		arg.OccurredAt,
-		arg.Category,
 		arg.IsPeriodic,
 	)
 }
@@ -116,6 +112,7 @@ func (q *Queries) DeleteAccountByID(ctx context.Context, id int32) error {
 }
 
 const deleteTransactionByID = `-- name: DeleteTransactionByID :exec
+
 DELETE FROM transactions
 WHERE id = ?
 `
@@ -164,7 +161,7 @@ func (q *Queries) GetAccountMemberRole(ctx context.Context, arg GetAccountMember
 }
 
 const getTransactionByID = `-- name: GetTransactionByID :one
-SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
+SELECT id, account_id, user_id, title, amount, occurred_at, is_periodic
 FROM transactions
 WHERE id = ?
 `
@@ -179,7 +176,6 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id int32) (Transaction
 		&i.Title,
 		&i.Amount,
 		&i.OccurredAt,
-		&i.Category,
 		&i.IsPeriodic,
 	)
 	return i, err
@@ -253,64 +249,12 @@ func (q *Queries) ListAccountMembers(ctx context.Context, accountID int32) ([]Li
 }
 
 const listTransactions = `-- name: ListTransactions :many
-SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
+SELECT id, account_id, user_id, title, amount, occurred_at, is_periodic
 FROM transactions
-WHERE account_id = ?
-
-  AND (? IS NULL OR occurred_at >= ?)
-  AND (? IS NULL OR occurred_at <= ?)
-
-  AND (? IS NULL OR is_periodic = ?)
-
-  AND (
-        ? IS NULL
-        OR (? = 'income' AND amount > 0)
-        OR (? = 'expense' AND amount < 0)
-      )
-
-  AND (? IS NULL OR category IN (/*SLICE:categories*/?))
-
-ORDER BY occurred_at DESC
 `
 
-type ListTransactionsParams struct {
-	AccountID    int32
-	Column2      interface{}
-	OccurredAt   time.Time
-	Column4      interface{}
-	OccurredAt_2 time.Time
-	Column6      interface{}
-	IsPeriodic   bool
-	Column8      interface{}
-	Column9      interface{}
-	Column10     interface{}
-	Column11     interface{}
-	Categories   []sql.NullString
-}
-
-func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error) {
-	query := listTransactions
-	var queryParams []interface{}
-	queryParams = append(queryParams, arg.AccountID)
-	queryParams = append(queryParams, arg.Column2)
-	queryParams = append(queryParams, arg.OccurredAt)
-	queryParams = append(queryParams, arg.Column4)
-	queryParams = append(queryParams, arg.OccurredAt_2)
-	queryParams = append(queryParams, arg.Column6)
-	queryParams = append(queryParams, arg.IsPeriodic)
-	queryParams = append(queryParams, arg.Column8)
-	queryParams = append(queryParams, arg.Column9)
-	queryParams = append(queryParams, arg.Column10)
-	queryParams = append(queryParams, arg.Column11)
-	if len(arg.Categories) > 0 {
-		for _, v := range arg.Categories {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:categories*/?", strings.Repeat(",?", len(arg.Categories))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:categories*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+func (q *Queries) ListTransactions(ctx context.Context) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, listTransactions)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +269,6 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 			&i.Title,
 			&i.Amount,
 			&i.OccurredAt,
-			&i.Category,
 			&i.IsPeriodic,
 		); err != nil {
 			return nil, err
