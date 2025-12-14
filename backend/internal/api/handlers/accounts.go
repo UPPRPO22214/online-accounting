@@ -26,6 +26,14 @@ func NewAccountHandler(
 	}
 }
 
+// Account модель счёта
+type Account struct {
+	ID          int32  `json:"id" example:"1"`
+	Name        string `json:"name" example:"Основной счёт"`
+	Description *string
+	Role        string
+}
+
 // CreateAccountRequest представляет данные для создания счёта
 type CreateAccountRequest struct {
 	Name        string  `json:"name" binding:"required" example:"Семейный бюджет"`
@@ -44,6 +52,19 @@ type AccountResponse struct {
 type InviteMemberRequest struct {
 	Email string `json:"email" binding:"required,email" example:"newmember@example.com"`
 	Role  string `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
+}
+
+// MemberResponse модель участника счёта
+type MemberResponse struct {
+	UserID int    `json:"user_id" example:"2"`
+	Role   string `json:"role" example:"admin"`
+}
+
+// MembersListResponse модель ответа со списком участников
+type MembersListResponse struct {
+	AccountID int              `json:"account_id" example:"1"`
+	Members   []MemberResponse `json:"members"`
+	Count     int              `json:"count" example:"3"`
 }
 
 // ChangeRoleRequest представляет данные для изменения роли участника
@@ -70,7 +91,11 @@ type IDResponse struct {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при создании счёта"
 // @Router       /accounts [post]
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	var req CreateAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -107,6 +132,12 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера"
 // @Router       /accounts/{id} [get]
 func (h *AccountHandler) GetAccount(c *gin.Context) {
+	//userID, exists := c.Get("user_id")
+	//if !exists {
+	//	  c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	//	  return
+	//}
+
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account id"})
@@ -131,6 +162,91 @@ func (h *AccountHandler) GetAccount(c *gin.Context) {
 	})
 }
 
+// ListUserAccounts godoc
+// @Summary      Получение списка счетов пользователя
+// @Description  Возвращает все счета, к которым пользователь имеет доступ (включая счета, где пользователь является участником). Список включает как собственные счета (роль Owner), так и счета, к которым пользователь был приглашён (роли Participant, Viewer и т.д.)
+// @Tags         accounts
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {array} []Account "Список счетов пользователя"
+// @Failure      401 {object} ErrorResponse "Отсутствует или невалидный JWT токен"
+// @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при получении счетов"
+// @Router       /accounts [get]
+func (h *AccountHandler) ListUserAccounts(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	accounts, err := h.accountService.ListForUser(c.Request.Context(), userID.(int))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	// Преобразуем в DTO
+	response := make([]Account, 0, len(accounts))
+	for _, acc := range accounts {
+		response = append(response, Account{
+			ID:          acc.ID,
+			Name:        acc.Name,
+			Description: convertNullString(acc.Description),
+			Role:        string(acc.Role),
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// ListAccountMembers godoc
+// @Summary      Получение списка участников счёта
+// @Description  Возвращает список пользователей с доступом к счёту и их ролями
+// @Tags         accounts
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id path int true "ID счёта" format(int64) example(1)
+// @Success      200 {object} MembersListResponse "Список участников"
+// @Failure      400 {object} ErrorResponse "Неверный ID счёта"
+// @Failure      401 {object} ErrorResponse "Требуется аутентификация"
+// @Failure      403 {object} ErrorResponse "Недостаточно прав"
+// @Failure      404 {object} ErrorResponse "Счёт не найден"
+// @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера"
+// @Router       /accounts/{id}/members [get]
+func (h *AccountHandler) ListAccountMembers(c *gin.Context) {
+	userID := c.GetInt("user_id")
+
+	accountID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account id"})
+		return
+	}
+
+	members, err := h.accountService.ListMembers(
+		c.Request.Context(),
+		accountID,
+		userID,
+	)
+	if err != nil {
+		if err == usecases.ErrForbidden {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	resp := make([]gin.H, 0, len(members))
+	for _, m := range members {
+		resp = append(resp, gin.H{
+			"user_id": m.UserID,
+			"role":    m.Role,
+		})
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 // DeleteAccount godoc
 // @Summary      Удаление счёта
 // @Description  Полностью удаляет счёт вместе со всеми связанными данными: транзакциями и участниками. Операция необратима. Доступна только владельцу счёта (роль Owner). После удаления все участники теряют доступ к счёту, и все транзакции становятся недоступны.
@@ -145,7 +261,11 @@ func (h *AccountHandler) GetAccount(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при удалении счёта"
 // @Router       /accounts/{id} [delete]
 func (h *AccountHandler) DeleteAccount(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -191,7 +311,11 @@ func (h *AccountHandler) DeleteAccount(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при добавлении участника"
 // @Router       /accounts/{id}/members [post]
 func (h *AccountHandler) InviteMember(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -248,7 +372,11 @@ func (h *AccountHandler) InviteMember(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при изменении роли"
 // @Router       /accounts/{id}/members/{user_id} [patch]
 func (h *AccountHandler) ChangeRole(c *gin.Context) {
-	ownerID, _ := c.Get("user_id")
+	ownerID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -304,7 +432,11 @@ func (h *AccountHandler) ChangeRole(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при удалении участника"
 // @Router       /accounts/{id}/members/{user_id} [delete]
 func (h *AccountHandler) RemoveMember(c *gin.Context) {
-	ownerID, _ := c.Get("user_id")
+	ownerID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -344,6 +476,8 @@ func parseRole(role string) query.AccountMembersRole {
 		return query.AccountMembersRoleEditor
 	case "admin":
 		return query.AccountMembersRoleAdmin
+	case "owner":
+		return query.AccountMembersRoleOwner
 	default:
 		return query.AccountMembersRoleViewer
 	}

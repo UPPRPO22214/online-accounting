@@ -18,6 +18,15 @@ func newUserRepository(db query.DBTX) *UserRepository {
 	return &UserRepository{queries: query.New(db)}
 }
 
+func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*query.GetUserByIDRow, error) {
+	user, err := r.queries.GetUserByID(ctx, int32(id))
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {

@@ -61,6 +61,10 @@ func (r *AccountRepository) GetAccountByID(ctx context.Context, accountID int) (
 	return &acc, nil
 }
 
+func (r *AccountRepository) ListUserAccounts(ctx context.Context, userID int) ([]query.ListUserAccountsRow, error) {
+	return r.queries.ListUserAccounts(ctx, int32(userID))
+}
+
 func (r *AccountRepository) DeleteAccountByID(ctx context.Context, accountID int) error {
 	return r.queries.DeleteAccountByID(ctx, int32(accountID))
 }

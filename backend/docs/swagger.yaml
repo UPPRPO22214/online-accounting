@@ -1,5 +1,18 @@
 basePath: /
 definitions:
+  handlers.Account:
+    properties:
+      description:
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Основной счёт
+        type: string
+      role:
+        type: string
+    type: object
   handlers.AccountResponse:
     properties:
       description:
@@ -108,6 +121,28 @@ definitions:
     - email
     - password
     type: object
+  handlers.MemberResponse:
+    properties:
+      role:
+        example: admin
+        type: string
+      user_id:
+        example: 2
+        type: integer
+    type: object
+  handlers.MembersListResponse:
+    properties:
+      account_id:
+        example: 1
+        type: integer
+      count:
+        example: 3
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/handlers.MemberResponse'
+        type: array
+    type: object
   handlers.MessageResponse:
     properties:
       message:
@@ -160,6 +195,15 @@ definitions:
         example: 42
         type: integer
     type: object
+  handlers.UserProfileResponse:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -168,6 +212,35 @@ info:
   version: "1.0"
 paths:
   /accounts:
+    get:
+      description: Возвращает все счета, к которым пользователь имеет доступ (включая
+        счета, где пользователь является участником). Список включает как собственные
+        счета (роль Owner), так и счета, к которым пользователь был приглашён (роли
+        Participant, Viewer и т.д.)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список счетов пользователя
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/handlers.Account'
+              type: array
+            type: array
+        "401":
+          description: Отсутствует или невалидный JWT токен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера при получении счетов
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение списка счетов пользователя
+      tags:
+      - accounts
     post:
       consumes:
       - application/json
@@ -291,6 +364,48 @@ paths:
       tags:
       - accounts
   /accounts/{id}/members:
+    get:
+      description: Возвращает список пользователей с доступом к счёту и их ролями
+      parameters:
+      - description: ID счёта
+        example: 1
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список участников
+          schema:
+            $ref: '#/definitions/handlers.MembersListResponse'
+        "400":
+          description: Неверный ID счёта
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Требуется аутентификация
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Недостаточно прав
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Счёт не найден
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение списка участников счёта
+      tags:
+      - accounts
     post:
       consumes:
       - application/json
@@ -657,6 +772,35 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
       summary: Авторизация пользователя
+      tags:
+      - auth
+  /auth/profile:
+    get:
+      description: Возвращает информацию о текущем аутентифицированном пользователе
+        на основе JWT токена. Включает основные данные пользователя (ID, email). Для
+        получения профиля требуется валидный JWT токен.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Профиль пользователя
+          schema:
+            $ref: '#/definitions/handlers.UserProfileResponse'
+        "401":
+          description: Отсутствует или невалидный JWT токен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Пользователь не найден (редкий случай, если пользователь удалён)
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение профиля пользователя
       tags:
       - auth
   /auth/register:

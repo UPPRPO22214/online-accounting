@@ -16,6 +16,47 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/accounts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает все счета, к которым пользователь имеет доступ (включая счета, где пользователь является участником). Список включает как собственные счета (роль Owner), так и счета, к которым пользователь был приглашён (роли Participant, Viewer и т.д.)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Получение списка счетов пользователя",
+                "responses": {
+                    "200": {
+                        "description": "Список счетов пользователя",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/handlers.Account"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Отсутствует или невалидный JWT токен",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера при получении счетов",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -195,6 +236,70 @@ const docTemplate = `{
             }
         },
         "/accounts/{id}/members": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список пользователей с доступом к счёту и их ролями",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Получение списка участников счёта",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1,
+                        "description": "ID счёта",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список участников",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MembersListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный ID счёта",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Требуется аутентификация",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Недостаточно прав",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Счёт не найден",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -707,6 +812,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает информацию о текущем аутентифицированном пользователе на основе JWT токена. Включает основные данные пользователя (ID, email). Для получения профиля требуется валидный JWT токен.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Получение профиля пользователя",
+                "responses": {
+                    "200": {
+                        "description": "Профиль пользователя",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserProfileResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Отсутствует или невалидный JWT токен",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден (редкий случай, если пользователь удалён)",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Создаёт нового пользователя с указанным email и паролем. Email должен быть уникальным. Пароль должен содержать минимум 6 символов. После успешной регистрации возвращается JWT токен для авторизации.",
@@ -820,6 +968,25 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.Account": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Основной счёт"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.AccountResponse": {
             "type": "object",
             "properties": {
@@ -973,6 +1140,38 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.MemberResponse": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "handlers.MembersListResponse": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.MemberResponse"
+                    }
+                }
+            }
+        },
         "handlers.MessageResponse": {
             "type": "object",
             "properties": {
@@ -1043,6 +1242,19 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 42
+                }
+            }
+        },
+        "handlers.UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         }

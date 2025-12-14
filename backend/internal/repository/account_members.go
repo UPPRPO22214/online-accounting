@@ -52,6 +52,10 @@ func (r *AccountMemberRepository) GetMemberRole(
 	return role, nil
 }
 
+func (r *AccountMemberRepository) ListMembers(ctx context.Context, accountID int) ([]query.ListAccountMembersRow, error) {
+	return r.queries.ListAccountMembers(ctx, int32(accountID))
+}
+
 func (r *AccountMemberRepository) UpdateMemberRole(
 	ctx context.Context,
 	accountID int,
