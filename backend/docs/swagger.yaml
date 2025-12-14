@@ -1,18 +1,5 @@
 basePath: /
 definitions:
-  handlers.Account:
-    properties:
-      description:
-        type: string
-      id:
-        example: 1
-        type: integer
-      name:
-        example: Основной счёт
-        type: string
-      role:
-        type: string
-    type: object
   handlers.AccountResponse:
     properties:
       description:
@@ -27,6 +14,27 @@ definitions:
       owner_id:
         example: 42
         type: integer
+    type: object
+  handlers.AccountRoleResponse:
+    properties:
+      description:
+        example: Общий счёт для домашних расходов
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Основной счёт
+        type: string
+      role:
+        enum:
+        - viewer
+        - editor
+        - admin
+        example: editor
+        type: string
+    required:
+    - role
     type: object
   handlers.ChangePasswordRequest:
     properties:
@@ -63,16 +71,18 @@ definitions:
   handlers.CreateTransactionRequest:
     properties:
       amount:
-        example: "-1500.50"
-        type: string
-      category:
-        example: Еда
-        type: string
-      is_periodic:
-        example: false
-        type: boolean
+        example: -1500.5
+        type: number
       occurred_at:
         example: "2024-12-13T14:30:00Z"
+        type: string
+      period:
+        enum:
+        - day
+        - week
+        - month
+        - year
+        example: week
         type: string
       title:
         example: Покупка продуктов
@@ -123,25 +133,23 @@ definitions:
     type: object
   handlers.MemberResponse:
     properties:
+      email:
+        example: newmember@example.com
+        type: string
       role:
-        example: admin
+        enum:
+        - viewer
+        - editor
+        - admin
+        example: editor
         type: string
       user_id:
         example: 2
         type: integer
-    type: object
-  handlers.MembersListResponse:
-    properties:
-      account_id:
-        example: 1
-        type: integer
-      count:
-        example: 3
-        type: integer
-      members:
-        items:
-          $ref: '#/definitions/handlers.MemberResponse'
-        type: array
+    required:
+    - email
+    - role
+    - user_id
     type: object
   handlers.MessageResponse:
     properties:
@@ -174,19 +182,16 @@ definitions:
         example: 1
         type: integer
       amount:
-        example: "-1500.50"
-        type: string
-      category:
-        example: Еда
-        type: string
+        example: -1500.5
+        type: number
       id:
         example: 123
         type: integer
-      is_periodic:
-        example: false
-        type: boolean
       occurred_at:
         example: "2024-12-13T14:30:00Z"
+        type: string
+      period:
+        example: week
         type: string
       title:
         example: Покупка продуктов
@@ -194,6 +199,22 @@ definitions:
       user_id:
         example: 42
         type: integer
+    type: object
+  handlers.UpdateTransactionRequest:
+    properties:
+      amount:
+        example: -2000
+        type: number
+      occurred_at:
+        example: "2024-12-20T15:00:00Z"
+        type: string
+      title:
+        example: Обновленное название
+        type: string
+    required:
+    - amount
+    - occurred_at
+    - title
     type: object
   handlers.UserProfileResponse:
     properties:
@@ -224,9 +245,7 @@ paths:
           description: Список счетов пользователя
           schema:
             items:
-              items:
-                $ref: '#/definitions/handlers.Account'
-              type: array
+              $ref: '#/definitions/handlers.AccountRoleResponse'
             type: array
         "401":
           description: Отсутствует или невалидный JWT токен
@@ -380,7 +399,9 @@ paths:
         "200":
           description: Список участников
           schema:
-            $ref: '#/definitions/handlers.MembersListResponse'
+            items:
+              $ref: '#/definitions/handlers.MemberResponse'
+            type: array
         "400":
           description: Неверный ID счёта
           schema:
@@ -568,8 +589,9 @@ paths:
       description: 'Возвращает список транзакций счёта с возможностью фильтрации.
         Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to
         (временной диапазон в RFC3339), type (income/expense для доходов/расходов),
-        is_periodic (только периодические), categories (массив категорий). Все фильтры
-        опциональны и могут комбинироваться.'
+        user_id (транзакции конкретного пользователя). Все фильтры опциональны и могут
+        комбинироваться. Возвращаются все транзакции (включая периодические), соответствующие
+        фильтрам, отсортированные по дате (новые первыми).'
       parameters:
       - description: ID счёта
         example: 1
@@ -587,11 +609,6 @@ paths:
         in: query
         name: date_to
         type: string
-      - description: Фильтр по периодическим транзакциям. true - только периодические,
-          false - только разовые
-        in: query
-        name: is_periodic
-        type: boolean
       - description: Фильтр по типу транзакции
         enum:
         - income
@@ -599,14 +616,11 @@ paths:
         in: query
         name: type
         type: string
-      - collectionFormat: multi
-        description: Массив категорий для фильтрации. Можно указать несколько через
-          &categories=Еда&categories=Транспорт
+      - description: Фильтр по ID пользователя (создателя транзакции)
+        example: 42
         in: query
-        items:
-          type: string
-        name: categories
-        type: array
+        name: user_id
+        type: integer
       produces:
       - application/json
       responses:
@@ -642,10 +656,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: 'Создаёт новую финансовую транзакцию в счёте. Доступно участникам
-        с ролью Editor и выше. Amount: положительное число для дохода, отрицательное
-        для расхода. Поле occurred_at опционально (по умолчанию текущее время). Category
-        опционально. IsPeriodic для периодических платежей (зарплата, аренда и т.д.).'
+      description: 'Создаёт финансовую транзакцию в счёте. Доступно участникам с ролью
+        Editor и выше. Amount: положительное число для дохода, отрицательное для расхода.
+        Если указан период (day/week/month/year), автоматически создаётся 500 периодических
+        записей с указанным интервалом. Например, period="week" создаст транзакции
+        с интервалом в 7 дней на ~9.6 лет вперёд. Это удобно для регулярных платежей:
+        зарплата, аренда, подписки.'
       parameters:
       - description: ID счёта, в котором создаётся транзакция
         example: 1
@@ -653,8 +669,9 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Данные транзакции. Title обязательно, amount в формате строки
-          с точкой как разделителем
+      - description: Данные транзакции. Title и amount обязательны. occurred_at опционален
+          (по умолчанию текущее время). period опционален (day/week/month/year для
+          периодических платежей)
         in: body
         name: request
         required: true
@@ -664,12 +681,13 @@ paths:
       - application/json
       responses:
         "201":
-          description: Транзакция успешно создана. Возвращается ID новой транзакции
+          description: Транзакция успешно создана. Для периодической транзакции создаётся
+            500 записей
           schema:
             $ref: '#/definitions/handlers.IDResponse'
         "400":
-          description: Неверный формат данных. Проверьте формат amount и occurred_at
-            (RFC3339)
+          description: Неверный формат данных. Проверьте формат amount, occurred_at
+            (RFC3339) и period (day/week/month/year)
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "401":
@@ -687,7 +705,7 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Создание транзакции
+      summary: Создание транзакции (обычной или периодической)
       tags:
       - transactions
   /auth/change-password:
@@ -774,6 +792,25 @@ paths:
       summary: Авторизация пользователя
       tags:
       - auth
+  /auth/logout:
+    post:
+      description: Удаляет JWT токен из cookies браузера. На клиенте также рекомендуется
+        очистить токен из localStorage/sessionStorage если он там хранится. После
+        выхода требуется повторная авторизация для доступа к защищённым эндпоинтам.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный выход из системы
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Выход из системы
+      tags:
+      - auth
   /auth/profile:
     get:
       description: Возвращает информацию о текущем аутентифицированном пользователе
@@ -845,7 +882,8 @@ paths:
       description: 'Удаляет транзакцию из счёта. Права доступа: Editor может удалять
         только свои транзакции (созданные им), Admin и Owner могут удалять любые транзакции.
         Viewer не может удалять транзакции. Операция необратима. Транзакция автоматически
-        получается по ID для проверки прав доступа.'
+        получается по ID для проверки прав доступа. ВАЖНО: при удалении периодической
+        транзакции удаляется только одна запись, а не вся серия.'
       parameters:
       - description: ID транзакции для удаления
         example: 123
@@ -880,6 +918,60 @@ paths:
       security:
       - BearerAuth: []
       summary: Удаление транзакции
+      tags:
+      - transactions
+    patch:
+      consumes:
+      - application/json
+      description: 'Обновляет поля транзакции: title, amount, occurred_at. Поле period
+        обновить нельзя. Права доступа: Editor может редактировать только свои транзакции
+        (созданные им), Admin и Owner могут редактировать любые транзакции. Viewer
+        не может редактировать транзакции. При обновлении периодической транзакции
+        изменяется только одна запись, а не вся серия.'
+      parameters:
+      - description: ID транзакции для обновления
+        example: 123
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные транзакции. Все поля обязательны.
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Транзакция успешно обновлена
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+        "400":
+          description: Неверный формат данных или ID транзакции
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Отсутствует или невалидный JWT токен
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Недостаточно прав. Editor может редактировать только свои транзакции,
+            Admin/Owner - любые
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Транзакция с указанным ID не найдена
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера при обновлении транзакции
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновление транзакции
       tags:
       - transactions
 swagger: "2.0"

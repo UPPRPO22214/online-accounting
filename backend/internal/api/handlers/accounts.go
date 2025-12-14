@@ -34,16 +34,16 @@ type CreateAccountRequest struct {
 
 // AccountResponse представляет информацию о счёте
 type AccountResponse struct {
-	ID          int32   `json:"id" example:"1"`
-	OwnerID     int32   `json:"owner_id" example:"42"`
-	Name        string  `json:"name" example:"Семейный бюджет"`
+	ID          int32   `json:"id" binding:"required" example:"1"`
+	OwnerID     int32   `json:"owner_id" binding:"required" example:"42"`
+	Name        string  `json:"name" binding:"required" example:"Семейный бюджет"`
 	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
 }
 
 // Account модель счёта
 type AccountRoleResponse struct {
-	ID          int32   `json:"id" example:"1"`
-	Name        string  `json:"name" example:"Основной счёт"`
+	ID          int32   `json:"id" binding:"required" example:"1"`
+	Name        string  `json:"name" binding:"required" example:"Основной счёт"`
 	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
 	Role        string  `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
 }
@@ -68,7 +68,7 @@ type ChangeRoleRequest struct {
 
 // IDResponse представляет ответ с ID созданной сущности
 type IDResponse struct {
-	ID int `json:"id" example:"1"`
+	ID int `json:"id" binding:"required" example:"1"`
 }
 
 // CreateAccount godoc

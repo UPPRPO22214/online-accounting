@@ -36,10 +36,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/handlers.Account"
-                                }
+                                "$ref": "#/definitions/handlers.AccountRoleResponse"
                             }
                         }
                     },
@@ -265,7 +262,10 @@ const docTemplate = `{
                     "200": {
                         "description": "Список участников",
                         "schema": {
-                            "$ref": "#/definitions/handlers.MembersListResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.MemberResponse"
+                            }
                         }
                     },
                     "400": {
@@ -533,7 +533,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Возвращает список транзакций счёта с возможностью фильтрации. Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to (временной диапазон в RFC3339), type (income/expense для доходов/расходов), is_periodic (только периодические), categories (массив категорий). Все фильтры опциональны и могут комбинироваться.",
+                "description": "Возвращает список транзакций счёта с возможностью фильтрации. Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to (временной диапазон в RFC3339), type (income/expense для доходов/расходов), user_id (транзакции конкретного пользователя). Все фильтры опциональны и могут комбинироваться. Возвращаются все транзакции (включая периодические), соответствующие фильтрам, отсортированные по дате (новые первыми).",
                 "produces": [
                     "application/json"
                 ],
@@ -565,12 +565,6 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
-                        "description": "Фильтр по периодическим транзакциям. true - только периодические, false - только разовые",
-                        "name": "is_periodic",
-                        "in": "query"
-                    },
-                    {
                         "enum": [
                             "income",
                             "expense"
@@ -581,13 +575,10 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "Массив категорий для фильтрации. Можно указать несколько через \u0026categories=Еда\u0026categories=Транспорт",
-                        "name": "categories",
+                        "type": "integer",
+                        "example": 42,
+                        "description": "Фильтр по ID пользователя (создателя транзакции)",
+                        "name": "user_id",
                         "in": "query"
                     }
                 ],
@@ -633,7 +624,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Создаёт новую финансовую транзакцию в счёте. Доступно участникам с ролью Editor и выше. Amount: положительное число для дохода, отрицательное для расхода. Поле occurred_at опционально (по умолчанию текущее время). Category опционально. IsPeriodic для периодических платежей (зарплата, аренда и т.д.).",
+                "description": "Создаёт финансовую транзакцию в счёте. Доступно участникам с ролью Editor и выше. Amount: положительное число для дохода, отрицательное для расхода. Если указан период (day/week/month/year), автоматически создаётся 500 периодических записей с указанным интервалом. Например, period=\"week\" создаст транзакции с интервалом в 7 дней на ~9.6 лет вперёд. Это удобно для регулярных платежей: зарплата, аренда, подписки.",
                 "consumes": [
                     "application/json"
                 ],
@@ -643,7 +634,7 @@ const docTemplate = `{
                 "tags": [
                     "transactions"
                 ],
-                "summary": "Создание транзакции",
+                "summary": "Создание транзакции (обычной или периодической)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -654,7 +645,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Данные транзакции. Title обязательно, amount в формате строки с точкой как разделителем",
+                        "description": "Данные транзакции. Title и amount обязательны. occurred_at опционален (по умолчанию текущее время). period опционален (day/week/month/year для периодических платежей)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -665,13 +656,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Транзакция успешно создана. Возвращается ID новой транзакции",
+                        "description": "Транзакция успешно создана. Для периодической транзакции создаётся 500 записей",
                         "schema": {
                             "$ref": "#/definitions/handlers.IDResponse"
                         }
                     },
                     "400": {
-                        "description": "Неверный формат данных. Проверьте формат amount и occurred_at (RFC3339)",
+                        "description": "Неверный формат данных. Проверьте формат amount, occurred_at (RFC3339) и period (day/week/month/year)",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -812,6 +803,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "description": "Удаляет JWT токен из cookies браузера. На клиенте также рекомендуется очистить токен из localStorage/sessionStorage если он там хранится. После выхода требуется повторная авторизация для доступа к защищённым эндпоинтам.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Выход из системы",
+                "responses": {
+                    "200": {
+                        "description": "Успешный выход из системы",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/profile": {
             "get": {
                 "security": [
@@ -914,7 +931,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Удаляет транзакцию из счёта. Права доступа: Editor может удалять только свои транзакции (созданные им), Admin и Owner могут удалять любые транзакции. Viewer не может удалять транзакции. Операция необратима. Транзакция автоматически получается по ID для проверки прав доступа.",
+                "description": "Удаляет транзакцию из счёта. Права доступа: Editor может удалять только свои транзакции (созданные им), Admin и Owner могут удалять любые транзакции. Viewer не может удалять транзакции. Операция необратима. Транзакция автоматически получается по ID для проверки прав доступа. ВАЖНО: при удалении периодической транзакции удаляется только одна запись, а не вся серия.",
                 "tags": [
                     "transactions"
                 ],
@@ -964,29 +981,85 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Обновляет поля транзакции: title, amount, occurred_at. Поле period обновить нельзя. Права доступа: Editor может редактировать только свои транзакции (созданные им), Admin и Owner могут редактировать любые транзакции. Viewer не может редактировать транзакции. При обновлении периодической транзакции изменяется только одна запись, а не вся серия.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Обновление транзакции",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 123,
+                        "description": "ID транзакции для обновления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Новые данные транзакции. Все поля обязательны.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTransactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Транзакция успешно обновлена",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный формат данных или ID транзакции",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Отсутствует или невалидный JWT токен",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Недостаточно прав. Editor может редактировать только свои транзакции, Admin/Owner - любые",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Транзакция с указанным ID не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера при обновлении транзакции",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
-        "handlers.Account": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Основной счёт"
-                },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
         "handlers.AccountResponse": {
             "type": "object",
             "properties": {
@@ -1005,6 +1078,35 @@ const docTemplate = `{
                 "owner_id": {
                     "type": "integer",
                     "example": 42
+                }
+            }
+        },
+        "handlers.AccountRoleResponse": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Общий счёт для домашних расходов"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Основной счёт"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "viewer",
+                        "editor",
+                        "admin"
+                    ],
+                    "example": "editor"
                 }
             }
         },
@@ -1062,20 +1164,22 @@ const docTemplate = `{
             ],
             "properties": {
                 "amount": {
-                    "type": "string",
-                    "example": "-1500.50"
-                },
-                "category": {
-                    "type": "string",
-                    "example": "Еда"
-                },
-                "is_periodic": {
-                    "type": "boolean",
-                    "example": false
+                    "type": "number",
+                    "example": -1500.5
                 },
                 "occurred_at": {
                     "type": "string",
                     "example": "2024-12-13T14:30:00Z"
+                },
+                "period": {
+                    "type": "string",
+                    "enum": [
+                        "day",
+                        "week",
+                        "month",
+                        "year"
+                    ],
+                    "example": "week"
                 },
                 "title": {
                     "type": "string",
@@ -1142,33 +1246,28 @@ const docTemplate = `{
         },
         "handlers.MemberResponse": {
             "type": "object",
+            "required": [
+                "email",
+                "role",
+                "user_id"
+            ],
             "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "newmember@example.com"
+                },
                 "role": {
                     "type": "string",
-                    "example": "admin"
+                    "enum": [
+                        "viewer",
+                        "editor",
+                        "admin"
+                    ],
+                    "example": "editor"
                 },
                 "user_id": {
                     "type": "integer",
                     "example": 2
-                }
-            }
-        },
-        "handlers.MembersListResponse": {
-            "type": "object",
-            "properties": {
-                "account_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "count": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "members": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.MemberResponse"
-                    }
                 }
             }
         },
@@ -1216,24 +1315,20 @@ const docTemplate = `{
                     "example": 1
                 },
                 "amount": {
-                    "type": "string",
-                    "example": "-1500.50"
-                },
-                "category": {
-                    "type": "string",
-                    "example": "Еда"
+                    "type": "number",
+                    "example": -1500.5
                 },
                 "id": {
                     "type": "integer",
                     "example": 123
                 },
-                "is_periodic": {
-                    "type": "boolean",
-                    "example": false
-                },
                 "occurred_at": {
                     "type": "string",
                     "example": "2024-12-13T14:30:00Z"
+                },
+                "period": {
+                    "type": "string",
+                    "example": "week"
                 },
                 "title": {
                     "type": "string",
@@ -1242,6 +1337,28 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 42
+                }
+            }
+        },
+        "handlers.UpdateTransactionRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "occurred_at",
+                "title"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": -2000
+                },
+                "occurred_at": {
+                    "type": "string",
+                    "example": "2024-12-20T15:00:00Z"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Обновленное название"
                 }
             }
         },
