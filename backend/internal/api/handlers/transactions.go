@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"microservices/accounter/internal/repository/query"
 	"microservices/accounter/internal/models"
+	"microservices/accounter/internal/repository/query"
 	"microservices/accounter/internal/usecases"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ func NewTransactionHandler(service *usecases.TransactionService) *TransactionHan
 // CreateTransactionRequest представляет данные для создания транзакции
 type CreateTransactionRequest struct {
 	Title      string  `json:"title" binding:"required" example:"Покупка продуктов"`
-	Amount     string  `json:"amount" binding:"required" example:"-1500.50"`
+	Amount     float64 `json:"amount" binding:"required" example:"-1500.50"`
 	OccurredAt *string `json:"occurred_at" example:"2024-12-13T14:30:00Z"`
 	Period     *string `json:"period" enums:"day,week,month,year" example:"week"`
 }
@@ -31,18 +31,18 @@ type CreateTransactionRequest struct {
 // UpdateTransactionRequest представляет данные для обновления транзакции
 type UpdateTransactionRequest struct {
 	Title      string  `json:"title" binding:"required" example:"Обновленное название"`
-	Amount     string  `json:"amount" binding:"required" example:"-2000.00"`
+	Amount     float64 `json:"amount" binding:"required" example:"-2000.00"`
 	OccurredAt *string `json:"occurred_at" binding:"required" example:"2024-12-20T15:00:00Z"`
 }
 
 // TransactionResponse представляет информацию о транзакции
 type TransactionResponse struct {
-	ID         int32     `json:"id" example:"123"`
-	AccountID  int32     `json:"account_id" example:"1"`
-	UserID     int32     `json:"user_id" example:"42"`
-	Title      string    `json:"title" example:"Покупка продуктов"`
-	Amount     string    `json:"amount" example:"-1500.50"`
-	OccurredAt time.Time `json:"occurred_at" example:"2024-12-13T14:30:00Z"`
+	ID         int32     `json:"id" binding:"required" example:"123"`
+	AccountID  int32     `json:"account_id" binding:"required" example:"1"`
+	UserID     int32     `json:"user_id" binding:"required" example:"42"`
+	Title      string    `json:"title" binding:"required" example:"Покупка продуктов"`
+	Amount     float64   `json:"amount" binding:"required" example:"-1500.50"`
+	OccurredAt time.Time `json:"occurred_at" binding:"required" example:"2024-12-13T14:30:00Z"`
 	Period     *string   `json:"period" example:"week"`
 }
 
@@ -106,7 +106,7 @@ func (h *TransactionHandler) CreateTransaction(c *gin.Context) {
 		accountID,
 		userID.(int),
 		req.Title,
-		req.Amount,
+		floatToDecimal(req.Amount),
 		occurredAt,
 		period,
 	)
@@ -219,7 +219,7 @@ func (h *TransactionHandler) ListTransactions(c *gin.Context) {
 			AccountID:  t.AccountID,
 			UserID:     t.UserID,
 			Title:      t.Title,
-			Amount:     t.Amount,
+			Amount:     decimalToFloat(t.Amount),
 			OccurredAt: t.OccurredAt,
 			Period:     period,
 		}
@@ -293,7 +293,7 @@ func (h *TransactionHandler) UpdateTransaction(c *gin.Context) {
 		int(transaction.UserID),
 		&models.UpdateTransactionParams{
 			Title:      req.Title,
-			Amount:     req.Amount,
+			Amount:     floatToDecimal(req.Amount),
 			OccurredAt: occurredAt,
 		},
 	)
@@ -379,4 +379,13 @@ func parsePeriod(period string) (query.TransactionsPeriod, error) {
 			Meta: "period must be one of: day, week, month, year",
 		}
 	}
+}
+
+func floatToDecimal(v float64) string {
+	return strconv.FormatFloat(v, 'f', 2, 64)
+}
+
+func decimalToFloat(s string) float64 {
+	double, _ := strconv.ParseFloat(s, 64)
+	return double
 }

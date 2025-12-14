@@ -3,6 +3,7 @@ package api
 import (
 	"microservices/accounter/internal/api/handlers"
 	"microservices/accounter/internal/api/middleware"
+	"microservices/accounter/internal/database"
 	"microservices/accounter/internal/tokens"
 	"microservices/accounter/internal/usecases"
 
@@ -12,7 +13,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin.Engine {
+func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager, db *database.Database) *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -34,6 +35,9 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 	authHandler := handlers.NewAuthHandler(services.AuthScv)
 	accountHandler := handlers.NewAccountHandler(services.AccountScv, services.AccountMember)
 	transactionHandler := handlers.NewTransactionHandler(services.TransactionScv)
+	healthHandler := handlers.NewHealthHandler(db)
+
+	router.GET("/health", healthHandler.Health)
 
 	// Public routes
 	auth := router.Group("/auth")

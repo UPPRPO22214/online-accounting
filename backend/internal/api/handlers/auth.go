@@ -18,8 +18,8 @@ func NewAuthHandler(service *usecases.AuthService) *AuthHandler {
 
 // UserProfileResponse модель ответа с профилем пользователя
 type UserProfileResponse struct {
-    ID    int    `json:"id" example:"1"`
-    Email string `json:"email" example:"user@example.com"`
+    ID    int    `json:"id" binding:"required" example:"1"`
+    Email string `json:"email" binding:"required" example:"user@example.com"`
 }
 
 // RegisterRequest представляет данные для регистрации пользователя
@@ -41,17 +41,17 @@ type ChangePasswordRequest struct {
 
 // TokenResponse представляет ответ с JWT токеном
 type TokenResponse struct {
-	AccessToken string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MDI1MDAwMDB9.abcdef123456"`
+	AccessToken string `json:"access_token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MDI1MDAwMDB9.abcdef123456"`
 }
 
 // ErrorResponse представляет стандартный ответ с ошибкой
 type ErrorResponse struct {
-	Error string `json:"error" example:"invalid credentials"`
+	Error string `json:"error" binding:"required" example:"invalid credentials"`
 }
 
 // MessageResponse представляет ответ с сообщением об успехе
 type MessageResponse struct {
-	Message string `json:"message" example:"password changed successfully"`
+	Message string `json:"message" binding:"required" example:"password changed successfully"`
 }
 
 // Register godoc
