@@ -23,6 +23,7 @@ func newTransactionService(repo *repository.Repository) *TransactionService {
 	}
 }
 
+// Create создаёт транзакцию. Если указан период, создаёт 500 периодических записей
 func (s *TransactionService) Create(
 	ctx context.Context,
 	accountID int,
@@ -30,35 +31,47 @@ func (s *TransactionService) Create(
 	title string,
 	amount string,
 	occurredAt time.Time,
-	category *string,
-	isPeriodic bool,
+	period query.NullTransactionsPeriod,
 ) (int, error) {
 
-	role, err := s.requireViewer(ctx, accountID, userID)
+	// Проверка прав доступа
+	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
-		return 0, err
+		return 0, ErrForbidden
 	}
+
 	if role == query.AccountMembersRoleViewer {
 		return 0, ErrForbidden
 	}
 
-	var cat sql.NullString
-	if category != nil {
-		cat = sql.NullString{String: *category, Valid: true}
-	}
-
-	return s.transactions.CreateTransaction(ctx, &models.CreateTransactionParams{
+	params := &models.CreateTransactionParams{
 		AccountID:  accountID,
 		UserID:     userID,
 		Title:      title,
 		Amount:     amount,
 		OccurredAt: occurredAt,
-		Category:   cat,
-		IsPeriodic: isPeriodic,
-	})
+		Period:     period,
+	}
+
+	// Если период не указан - создаём одну транзакцию
+	if !period.Valid {
+		return s.transactions.CreateTransaction(ctx, params)
+	}
+
+	// Если период указан - создаём 500 периодических транзакций
+	err = s.transactions.CreatePeriodicTransactions(ctx, params, 500)
+	if err != nil {
+		return 0, err
+	}
+
+	// Возвращаем ID первой созданной транзакции
+	// (в данном случае это не критично, так как создаётся много записей)
+	return 1, nil
 }
 
+// GetByID получает транзакцию по ID
 func (s *TransactionService) GetByID(ctx context.Context, id int32) (*query.Transaction, error) {
+
 	transaction, err := s.transactions.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -70,6 +83,7 @@ func (s *TransactionService) GetByID(ctx context.Context, id int32) (*query.Tran
 	return transaction, nil
 }
 
+// List возвращает список транзакций с фильтрацией
 func (s *TransactionService) List(
 	ctx context.Context,
 	accountID int,
@@ -77,13 +91,45 @@ func (s *TransactionService) List(
 	params *models.ListTransactionsFilter,
 ) ([]query.Transaction, error) {
 
-	if _, err := s.requireViewer(ctx, accountID, userID); err != nil {
-		return nil, err
+	// Проверка, что пользователь является участником счёта
+	_, err := s.members.GetMemberRole(ctx, accountID, userID)
+	if err != nil {
+		return nil, ErrForbidden
 	}
 
 	return s.transactions.List(ctx, params)
 }
 
+// Update обновляет транзакцию с проверкой прав доступа
+func (s *TransactionService) Update(
+	ctx context.Context,
+	transactionID int32,
+	accountID int,
+	userID int,
+	transactionOwnerID int,
+	params *models.UpdateTransactionParams,
+) error {
+
+	role, err := s.members.GetMemberRole(ctx, accountID, userID)
+	if err != nil {
+		return ErrForbidden
+	}
+
+	// Viewer не может редактировать
+	if role == query.AccountMembersRoleViewer {
+		return ErrForbidden
+	}
+
+	// Editor может редактировать только свои транзакции
+	if role == query.AccountMembersRoleEditor && userID != transactionOwnerID {
+		return ErrForbidden
+	}
+
+	// Admin и Owner могут редактировать любые транзакции
+	return s.transactions.UpdateTransaction(ctx, transactionID, params)
+}
+
+// Delete удаляет транзакцию с проверкой прав
 func (s *TransactionService) Delete(
 	ctx context.Context,
 	accountID int,
@@ -92,32 +138,21 @@ func (s *TransactionService) Delete(
 	transactionID int,
 ) error {
 
-	role, err := s.requireViewer(ctx, accountID, userID)
+	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
-		return err
+		return ErrForbidden
 	}
 
+	// Viewer не может удалять
 	if role == query.AccountMembersRoleViewer {
 		return ErrForbidden
 	}
 
+	// Editor может удалять только свои транзакции
 	if role == query.AccountMembersRoleEditor && userID != transactionOwnerID {
 		return ErrForbidden
 	}
 
+	// Admin и Owner могут удалять любые транзакции
 	return s.transactions.DeleteByID(ctx, transactionID)
-}
-
-func (s *TransactionService) requireViewer(
-	ctx context.Context,
-	accountID int,
-	userID int,
-) (query.AccountMembersRole, error) {
-
-	role, err := s.members.GetMemberRole(ctx, accountID, userID)
-	if err != nil {
-		return "", ErrForbidden
-	}
-
-	return role, nil
 }

@@ -80,10 +80,9 @@ INSERT INTO transactions (
     title,
     amount,
     occurred_at,
-    category,
-    is_periodic
+    period
 )
-VALUES (?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: GetTransactionByID :one
 SELECT *
@@ -94,20 +93,16 @@ WHERE id = ?;
 SELECT *
 FROM transactions
 WHERE account_id = ?
+    AND (? IS NULL OR user_id = ?)
 
-  AND (? IS NULL OR occurred_at >= ?)
-  AND (? IS NULL OR occurred_at <= ?)
+    AND (? IS NULL OR occurred_at >= ?)
+    AND (? IS NULL OR occurred_at <= ?)
 
-  AND (? IS NULL OR is_periodic = ?)
-
-  AND (
+    AND (
         ? IS NULL
         OR (? = 'income' AND amount > 0)
         OR (? = 'expense' AND amount < 0)
-      )
-
-  AND (? IS NULL OR category IN (sqlc.slice('categories')))
-
+    )
 ORDER BY occurred_at DESC;
 
 -- name: DeleteTransactionByID :exec

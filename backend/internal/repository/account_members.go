@@ -70,6 +70,15 @@ func (r *AccountMemberRepository) UpdateMemberRole(
 	})
 }
 
+func (r *AccountMemberRepository) IsMember(ctx context.Context, accountID int, userID int) error {
+	_, err := r.queries.GetAccountMemberRole(ctx, query.GetAccountMemberRoleParams{
+		AccountID: int32(accountID),
+		UserID:    int32(userID),
+	})
+
+	return err
+}
+
 func (r *AccountMemberRepository) RemoveMember(ctx context.Context, accountID int, userID int) error {
 	return r.queries.RemoveAccountMember(ctx, query.RemoveAccountMemberParams{
 		AccountID: int32(accountID),
