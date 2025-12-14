@@ -17,7 +17,11 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 
 	router.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins: []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowOrigins: []string{
+			"http://localhost:5173", "https://localhost:5173",
+			"http://localhost:5174", "https://localhost:5174",
+			"http://kvk-server.ru", "https://kvk-server.ru",
+		},
 		AllowMethods: []string{"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"},
 		ExposeHeaders: []string{"Content-Length"},

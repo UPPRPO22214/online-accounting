@@ -55,6 +55,50 @@ func (ns NullAccountMembersRole) Value() (driver.Value, error) {
 	return string(ns.AccountMembersRole), nil
 }
 
+type TransactionsPeriod string
+
+const (
+	TransactionsPeriodDay   TransactionsPeriod = "day"
+	TransactionsPeriodWeek  TransactionsPeriod = "week"
+	TransactionsPeriodMonth TransactionsPeriod = "month"
+	TransactionsPeriodYear  TransactionsPeriod = "year"
+)
+
+func (e *TransactionsPeriod) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionsPeriod(s)
+	case string:
+		*e = TransactionsPeriod(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionsPeriod: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionsPeriod struct {
+	TransactionsPeriod TransactionsPeriod
+	Valid              bool // Valid is true if TransactionsPeriod is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionsPeriod) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionsPeriod, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionsPeriod.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionsPeriod) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransactionsPeriod), nil
+}
+
 type Account struct {
 	ID          int32
 	Name        string
@@ -75,7 +119,7 @@ type Transaction struct {
 	Title      string
 	Amount     string
 	OccurredAt time.Time
-	IsPeriodic bool
+	Period     NullTransactionsPeriod
 }
 
 type User struct {

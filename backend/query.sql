@@ -80,7 +80,7 @@ INSERT INTO transactions (
     title,
     amount,
     occurred_at,
-    is_periodic
+    period
 )
 VALUES (?, ?, ?, ?, ?, ?);
 
@@ -91,10 +91,19 @@ WHERE id = ?;
 
 -- name: ListTransactions :many
 SELECT *
-FROM transactions;
---
---
---
+FROM transactions
+WHERE account_id = ?
+    AND (? IS NULL OR user_id = ?)
+
+    AND (? IS NULL OR occurred_at >= ?)
+    AND (? IS NULL OR occurred_at <= ?)
+
+    AND (
+        ? IS NULL
+        OR (? = 'income' AND amount > 0)
+        OR (? = 'expense' AND amount < 0)
+    )
+ORDER BY occurred_at DESC;
 
 -- name: DeleteTransactionByID :exec
 DELETE FROM transactions

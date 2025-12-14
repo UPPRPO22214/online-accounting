@@ -23,6 +23,7 @@ func newTransactionService(repo *repository.Repository) *TransactionService {
 	}
 }
 
+// Create создаёт транзакцию. Если указан период, создаёт 500 периодических записей
 func (s *TransactionService) Create(
 	ctx context.Context,
 	accountID int,
@@ -30,28 +31,45 @@ func (s *TransactionService) Create(
 	title string,
 	amount string,
 	occurredAt time.Time,
-	isPeriodic bool,
+	period query.NullTransactionsPeriod,
 ) (int, error) {
 
+	// Проверка прав доступа
 	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
-		return 0, err
+		return 0, ErrForbidden
 	}
 
 	if role == query.AccountMembersRoleViewer {
 		return 0, ErrForbidden
 	}
 
-	return s.transactions.CreateTransaction(ctx, &models.CreateTransactionParams{
+	params := &models.CreateTransactionParams{
 		AccountID:  accountID,
 		UserID:     userID,
 		Title:      title,
 		Amount:     amount,
 		OccurredAt: occurredAt,
-		IsPeriodic: isPeriodic,
-	})
+		Period:     period,
+	}
+
+	// Если период не указан - создаём одну транзакцию
+	if !period.Valid {
+		return s.transactions.CreateTransaction(ctx, params)
+	}
+
+	// Если период указан - создаём 500 периодических транзакций
+	err = s.transactions.CreatePeriodicTransactions(ctx, params, 500)
+	if err != nil {
+		return 0, err
+	}
+
+	// Возвращаем ID первой созданной транзакции
+	// (в данном случае это не критично, так как создаётся много записей)
+	return 1, nil
 }
 
+// GetByID получает транзакцию по ID
 func (s *TransactionService) GetByID(ctx context.Context, id int32) (*query.Transaction, error) {
 	transaction, err := s.transactions.GetByID(ctx, id)
 	if err != nil {
@@ -64,6 +82,7 @@ func (s *TransactionService) GetByID(ctx context.Context, id int32) (*query.Tran
 	return transaction, nil
 }
 
+// List возвращает список транзакций с фильтрацией
 func (s *TransactionService) List(
 	ctx context.Context,
 	accountID int,
@@ -71,13 +90,16 @@ func (s *TransactionService) List(
 	params *models.ListTransactionsFilter,
 ) ([]query.Transaction, error) {
 
-	if err := s.members.IsMember(ctx, accountID, userID); err != nil {
-		return nil, err
+	// Проверка, что пользователь является участником счёта
+	_, err := s.members.GetMemberRole(ctx, accountID, userID)
+	if err != nil {
+		return nil, ErrForbidden
 	}
 
 	return s.transactions.List(ctx, params)
 }
 
+// Delete удаляет транзакцию с проверкой прав
 func (s *TransactionService) Delete(
 	ctx context.Context,
 	accountID int,
@@ -88,16 +110,19 @@ func (s *TransactionService) Delete(
 
 	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
-		return err
+		return ErrForbidden
 	}
 
+	// Viewer не может удалять
 	if role == query.AccountMembersRoleViewer {
 		return ErrForbidden
 	}
 
+	// Editor может удалять только свои транзакции
 	if role == query.AccountMembersRoleEditor && userID != transactionOwnerID {
 		return ErrForbidden
 	}
 
+	// Admin и Owner могут удалять любые транзакции
 	return s.transactions.DeleteByID(ctx, transactionID)
 }

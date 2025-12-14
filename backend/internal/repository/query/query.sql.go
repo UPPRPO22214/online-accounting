@@ -62,7 +62,7 @@ INSERT INTO transactions (
     title,
     amount,
     occurred_at,
-    is_periodic
+    period
 )
 VALUES (?, ?, ?, ?, ?, ?)
 `
@@ -73,7 +73,7 @@ type CreateTransactionParams struct {
 	Title      string
 	Amount     string
 	OccurredAt time.Time
-	IsPeriodic bool
+	Period     NullTransactionsPeriod
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (sql.Result, error) {
@@ -83,7 +83,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.Title,
 		arg.Amount,
 		arg.OccurredAt,
-		arg.IsPeriodic,
+		arg.Period,
 	)
 }
 
@@ -112,7 +112,6 @@ func (q *Queries) DeleteAccountByID(ctx context.Context, id int32) error {
 }
 
 const deleteTransactionByID = `-- name: DeleteTransactionByID :exec
-
 DELETE FROM transactions
 WHERE id = ?
 `
@@ -161,7 +160,7 @@ func (q *Queries) GetAccountMemberRole(ctx context.Context, arg GetAccountMember
 }
 
 const getTransactionByID = `-- name: GetTransactionByID :one
-SELECT id, account_id, user_id, title, amount, occurred_at, is_periodic
+SELECT id, account_id, user_id, title, amount, occurred_at, period
 FROM transactions
 WHERE id = ?
 `
@@ -176,7 +175,7 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id int32) (Transaction
 		&i.Title,
 		&i.Amount,
 		&i.OccurredAt,
-		&i.IsPeriodic,
+		&i.Period,
 	)
 	return i, err
 }
@@ -249,12 +248,48 @@ func (q *Queries) ListAccountMembers(ctx context.Context, accountID int32) ([]Li
 }
 
 const listTransactions = `-- name: ListTransactions :many
-SELECT id, account_id, user_id, title, amount, occurred_at, is_periodic
+SELECT id, account_id, user_id, title, amount, occurred_at, period
 FROM transactions
+WHERE account_id = ?
+    AND (? IS NULL OR user_id = ?)
+
+    AND (? IS NULL OR occurred_at >= ?)
+    AND (? IS NULL OR occurred_at <= ?)
+
+    AND (
+        ? IS NULL
+        OR (? = 'income' AND amount > 0)
+        OR (? = 'expense' AND amount < 0)
+    )
+ORDER BY occurred_at DESC
 `
 
-func (q *Queries) ListTransactions(ctx context.Context) ([]Transaction, error) {
-	rows, err := q.db.QueryContext(ctx, listTransactions)
+type ListTransactionsParams struct {
+	AccountID    int32
+	Column2      interface{}
+	UserID       int32
+	Column4      interface{}
+	OccurredAt   time.Time
+	Column6      interface{}
+	OccurredAt_2 time.Time
+	Column8      interface{}
+	Column9      interface{}
+	Column10     interface{}
+}
+
+func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, listTransactions,
+		arg.AccountID,
+		arg.Column2,
+		arg.UserID,
+		arg.Column4,
+		arg.OccurredAt,
+		arg.Column6,
+		arg.OccurredAt_2,
+		arg.Column8,
+		arg.Column9,
+		arg.Column10,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +304,7 @@ func (q *Queries) ListTransactions(ctx context.Context) ([]Transaction, error) {
 			&i.Title,
 			&i.Amount,
 			&i.OccurredAt,
-			&i.IsPeriodic,
+			&i.Period,
 		); err != nil {
 			return nil, err
 		}
