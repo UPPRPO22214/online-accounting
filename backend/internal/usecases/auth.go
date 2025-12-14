@@ -8,6 +8,7 @@ import (
 	"microservices/accounter/internal/crypto"
 	"microservices/accounter/internal/models"
 	"microservices/accounter/internal/repository"
+	"microservices/accounter/internal/repository/query"
 	"microservices/accounter/internal/tokens"
 )
 
@@ -16,7 +17,7 @@ type AuthService struct {
 	tokens *tokens.JWTManager
 }
 
-func newAuthService(repo *repository.Repository, tokens  *tokens.JWTManager) *AuthService {
+func newAuthService(repo *repository.Repository, tokens *tokens.JWTManager) *AuthService {
 	return &AuthService{
 		users:  repo.UserRepo,
 		tokens: tokens,
@@ -47,6 +48,18 @@ func (s *AuthService) Register(ctx context.Context, email string, password strin
 	}
 
 	return s.tokens.Generate(userID)
+}
+
+func (s *AuthService) Profile(ctx context.Context, userID int) (*query.GetUserByIDRow, error) {
+	user, err := s.users.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, email string, password string) (string, error) {
@@ -87,4 +100,3 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID int, newPasswor
 func (s *AuthService) CheckUserExists(ctx context.Context, userID int) (bool, error) {
 	return s.users.UserExistsByID(ctx, userID)
 }
-

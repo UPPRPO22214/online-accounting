@@ -16,6 +16,12 @@ func NewAuthHandler(service *usecases.AuthService) *AuthHandler {
 	return &AuthHandler{service: service}
 }
 
+// UserProfileResponse модель ответа с профилем пользователя
+type UserProfileResponse struct {
+    ID    int    `json:"id" example:"1"`
+    Email string `json:"email" example:"user@example.com"`
+}
+
 // RegisterRequest представляет данные для регистрации пользователя
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email" example:"user@example.com"`
@@ -89,6 +95,43 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	)
 
 	c.JSON(http.StatusCreated, TokenResponse{AccessToken: token})
+}
+
+// GetProfile godoc
+// @Summary      Получение профиля пользователя
+// @Description  Возвращает информацию о текущем аутентифицированном пользователе на основе JWT токена. Включает основные данные пользователя (ID, email). Для получения профиля требуется валидный JWT токен.
+// @Tags         auth
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200 {object} UserProfileResponse "Профиль пользователя"
+// @Failure      401 {object} ErrorResponse "Отсутствует или невалидный JWT токен"
+// @Failure      404 {object} ErrorResponse "Пользователь не найден (редкий случай, если пользователь удалён)"
+// @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера"
+// @Router       /auth/profile [get]
+func (h *AuthHandler) GetProfile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.service.Profile(
+		c.Request.Context(),
+		userID.(int),
+	)
+	if err != nil {
+		if err == usecases.ErrUserNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":    user.ID,
+		"email": user.Email,
+	})
 }
 
 // Login godoc

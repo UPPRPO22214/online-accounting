@@ -16,8 +16,11 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
 		AllowCredentials: true,
+		AllowOrigins: []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowMethods: []string{"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"},
+		ExposeHeaders: []string{"Content-Length"},
 	}))
 
 	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
@@ -38,16 +41,22 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 	// Protected routes
 	authMiddleware := middleware.AuthMiddleware(jwtManager)
 
-	router.POST("/auth/change-password", authMiddleware, authHandler.ChangePassword)
+	auth = router.Group("/auth", authMiddleware)
+	{
+		auth.POST("/change-password", authHandler.ChangePassword)
+		auth.GET("/profile", authHandler.GetProfile)
+	}
 
 	// Accounts
 	accounts := router.Group("/accounts", authMiddleware)
 	{
+		accounts.GET("", accountHandler.ListUserAccounts)
 		accounts.POST("", accountHandler.CreateAccount)
 		accounts.GET("/:id", accountHandler.GetAccount)
 		accounts.DELETE("/:id", accountHandler.DeleteAccount)
 
 		// Members
+		accounts.GET("/:id/members", accountHandler.ListAccountMembers)
 		accounts.POST("/:id/members", accountHandler.InviteMember)
 		accounts.PATCH("/:id/members/:user_id", accountHandler.ChangeRole)
 		accounts.DELETE("/:id/members/:user_id", accountHandler.RemoveMember)

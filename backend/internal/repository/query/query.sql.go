@@ -199,6 +199,59 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, email
+FROM users
+WHERE id = ?
+LIMIT 1
+`
+
+type GetUserByIDRow struct {
+	ID    int32
+	Email string
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i GetUserByIDRow
+	err := row.Scan(&i.ID, &i.Email)
+	return i, err
+}
+
+const listAccountMembers = `-- name: ListAccountMembers :many
+SELECT user_id, role
+FROM account_members
+WHERE account_id = ?
+`
+
+type ListAccountMembersRow struct {
+	UserID int32
+	Role   AccountMembersRole
+}
+
+func (q *Queries) ListAccountMembers(ctx context.Context, accountID int32) ([]ListAccountMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAccountMembers, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAccountMembersRow
+	for rows.Next() {
+		var i ListAccountMembersRow
+		if err := rows.Scan(&i.UserID, &i.Role); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTransactions = `-- name: ListTransactions :many
 SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
 FROM transactions
@@ -274,6 +327,53 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 			&i.OccurredAt,
 			&i.Category,
 			&i.IsPeriodic,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserAccounts = `-- name: ListUserAccounts :many
+SELECT
+    a.id,
+    a.name,
+    a.description,
+    am.role
+FROM account_members am
+JOIN accounts a ON a.id = am.account_id
+WHERE am.user_id = ?
+ORDER BY a.id
+`
+
+type ListUserAccountsRow struct {
+	ID          int32
+	Name        string
+	Description sql.NullString
+	Role        AccountMembersRole
+}
+
+func (q *Queries) ListUserAccounts(ctx context.Context, userID int32) ([]ListUserAccountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserAccounts, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserAccountsRow
+	for rows.Next() {
+		var i ListUserAccountsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Role,
 		); err != nil {
 			return nil, err
 		}
