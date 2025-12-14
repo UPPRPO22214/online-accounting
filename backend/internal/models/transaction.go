@@ -15,10 +15,16 @@ type CreateTransactionParams struct {
 	Period     query.NullTransactionsPeriod
 }
 
+type UpdateTransactionParams struct {
+	Title      string
+	Amount     string
+	OccurredAt time.Time
+}
+
 type ListTransactionsFilter struct {
-	AccountID  int
-	UserID     *int
-	DateFrom   *time.Time
-	DateTo     *time.Time
-	Type       *string    // "income" | "expense"
+	AccountID int
+	UserID    *int
+	DateFrom  *time.Time
+	DateTo    *time.Time
+	Type      *string // "income" | "expense"
 }

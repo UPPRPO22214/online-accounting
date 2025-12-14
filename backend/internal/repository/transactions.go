@@ -10,11 +10,13 @@ import (
 
 type TransactionRepository struct {
 	queries *query.Queries
+	db      query.DBTX
 }
 
 func newTransactionRepository(db query.DBTX) *TransactionRepository {
 	return &TransactionRepository{
 		queries: query.New(db),
+		db:      db,
 	}
 }
 
@@ -28,7 +30,6 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, p *models
 		OccurredAt: p.OccurredAt,
 		Period:     p.Period,
 	})
-
 	if err != nil {
 		return 0, err
 	}
@@ -47,7 +48,6 @@ func (r *TransactionRepository) CreatePeriodicTransactions(
 	p *models.CreateTransactionParams,
 	count int,
 ) error {
-
 	if !p.Period.Valid {
 		return nil // Не периодическая транзакция
 	}
@@ -80,8 +80,29 @@ func (r *TransactionRepository) GetByID(ctx context.Context, id int32) (*query.T
 	if err != nil {
 		return nil, err
 	}
-	
 	return &transaction, nil
+}
+
+// UpdateTransaction обновляет поля транзакции
+func (r *TransactionRepository) UpdateTransaction(
+	ctx context.Context,
+	id int32,
+	params *models.UpdateTransactionParams,
+) error {
+	sql := `
+		UPDATE transactions
+		SET title = ?, amount = ?, occurred_at = ?
+		WHERE id = ?
+	`
+
+	_, err := r.db.ExecContext(ctx, sql,
+		params.Title,
+		params.Amount,
+		params.OccurredAt,
+		id,
+	)
+
+	return err
 }
 
 // List возвращает список транзакций с фильтрацией

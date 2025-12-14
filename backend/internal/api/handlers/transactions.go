@@ -28,6 +28,13 @@ type CreateTransactionRequest struct {
 	Period     *string `json:"period" enums:"day,week,month,year" example:"week"`
 }
 
+// UpdateTransactionRequest представляет данные для обновления транзакции
+type UpdateTransactionRequest struct {
+	Title      string  `json:"title" binding:"required" example:"Обновленное название"`
+	Amount     string  `json:"amount" binding:"required" example:"-2000.00"`
+	OccurredAt *string `json:"occurred_at" binding:"required" example:"2024-12-20T15:00:00Z"`
+}
+
 // TransactionResponse представляет информацию о транзакции
 type TransactionResponse struct {
 	ID         int32     `json:"id" example:"123"`
@@ -219,6 +226,87 @@ func (h *TransactionHandler) ListTransactions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// UpdateTransaction godoc
+// @Summary      Обновление транзакции
+// @Description  Обновляет поля транзакции: title, amount, occurred_at. Поле period обновить нельзя. Права доступа: Editor может редактировать только свои транзакции (созданные им), Admin и Owner могут редактировать любые транзакции. Viewer не может редактировать транзакции. При обновлении периодической транзакции изменяется только одна запись, а не вся серия.
+// @Tags         transactions
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path int true "ID транзакции для обновления" example(123)
+// @Param        request body UpdateTransactionRequest true "Новые данные транзакции. Все поля обязательны."
+// @Success      200 {object} MessageResponse "Транзакция успешно обновлена"
+// @Failure      400 {object} ErrorResponse "Неверный формат данных или ID транзакции"
+// @Failure      401 {object} ErrorResponse "Отсутствует или невалидный JWT токен"
+// @Failure      403 {object} ErrorResponse "Недостаточно прав. Editor может редактировать только свои транзакции, Admin/Owner - любые"
+// @Failure      404 {object} ErrorResponse "Транзакция с указанным ID не найдена"
+// @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при обновлении транзакции"
+// @Router       /transactions/{id} [patch]
+func (h *TransactionHandler) UpdateTransaction(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+
+	transactionID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid transaction id"})
+		return
+	}
+
+	var req UpdateTransactionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Парсинг даты
+	var occurredAt time.Time
+	if req.OccurredAt != nil {
+		parsed, err := time.Parse(time.RFC3339, *req.OccurredAt)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid occurred_at format, use RFC3339"})
+			return
+		}
+		occurredAt = parsed
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "occurred_at is required"})
+		return
+	}
+
+	// Получаем транзакцию для проверки прав
+	transaction, err := h.service.GetByID(c.Request.Context(), int32(transactionID))
+	if err != nil {
+		if err == usecases.ErrTransactionNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Обновляем транзакцию
+	err = h.service.Update(
+		c.Request.Context(),
+		int32(transactionID),
+		int(transaction.AccountID),
+		userID.(int),
+		int(transaction.UserID),
+		&models.UpdateTransactionParams{
+			Title:      req.Title,
+			Amount:     req.Amount,
+			OccurredAt: occurredAt,
+		},
+	)
+	if err != nil {
+		if err == usecases.ErrForbidden {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "transaction updated successfully"})
 }
 
 // DeleteTransaction godoc

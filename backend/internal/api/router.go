@@ -73,6 +73,7 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 
 	// Transactions
 	router.DELETE("/transactions/:id", authMiddleware, transactionHandler.DeleteTransaction)
+	router.PATCH("/transactions/:id", authMiddleware, transactionHandler.UpdateTransaction)
 
 	return router
 }

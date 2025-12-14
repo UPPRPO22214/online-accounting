@@ -71,6 +71,7 @@ func (s *TransactionService) Create(
 
 // GetByID получает транзакцию по ID
 func (s *TransactionService) GetByID(ctx context.Context, id int32) (*query.Transaction, error) {
+
 	transaction, err := s.transactions.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -97,6 +98,35 @@ func (s *TransactionService) List(
 	}
 
 	return s.transactions.List(ctx, params)
+}
+
+// Update обновляет транзакцию с проверкой прав доступа
+func (s *TransactionService) Update(
+	ctx context.Context,
+	transactionID int32,
+	accountID int,
+	userID int,
+	transactionOwnerID int,
+	params *models.UpdateTransactionParams,
+) error {
+
+	role, err := s.members.GetMemberRole(ctx, accountID, userID)
+	if err != nil {
+		return ErrForbidden
+	}
+
+	// Viewer не может редактировать
+	if role == query.AccountMembersRoleViewer {
+		return ErrForbidden
+	}
+
+	// Editor может редактировать только свои транзакции
+	if role == query.AccountMembersRoleEditor && userID != transactionOwnerID {
+		return ErrForbidden
+	}
+
+	// Admin и Owner могут редактировать любые транзакции
+	return s.transactions.UpdateTransaction(ctx, transactionID, params)
 }
 
 // Delete удаляет транзакцию с проверкой прав
