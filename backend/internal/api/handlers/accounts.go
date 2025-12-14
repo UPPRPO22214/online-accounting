@@ -42,10 +42,10 @@ type AccountResponse struct {
 
 // Account модель счёта
 type AccountRoleResponse struct {
-	ID          int32  `json:"id" example:"1"`
-	Name        string `json:"name" example:"Основной счёт"`
+	ID          int32   `json:"id" example:"1"`
+	Name        string  `json:"name" example:"Основной счёт"`
 	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
-	Role        string `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
+	Role        string  `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
 }
 
 // InviteMemberRequest представляет данные для приглашения участника
@@ -56,7 +56,8 @@ type InviteMemberRequest struct {
 
 // MemberResponse модель участника счёта
 type MemberResponse struct {
-	UserID int    `json:"user_id" example:"2"`
+	UserID int32  `json:"user_id" binding:"required,user_id" example:"2"`
+	Email  string `json:"email" binding:"required,email" example:"newmember@example.com"`
 	Role   string `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
 }
 
@@ -197,7 +198,7 @@ func (h *AccountHandler) ListUserAccounts(c *gin.Context) {
 // @Security     BearerAuth
 // @Produce      json
 // @Param        id path int true "ID счёта" format(int64) example(1)
-// @Success      200 {array} MembersResponse "Список участников"
+// @Success      200 {array} MemberResponse "Список участников"
 // @Failure      400 {object} ErrorResponse "Неверный ID счёта"
 // @Failure      401 {object} ErrorResponse "Требуется аутентификация"
 // @Failure      403 {object} ErrorResponse "Недостаточно прав"
@@ -227,11 +228,12 @@ func (h *AccountHandler) ListAccountMembers(c *gin.Context) {
 		return
 	}
 
-	resp := make([]gin.H, 0, len(members))
+	resp := make([]MemberResponse, 0, len(members))
 	for _, m := range members {
-		resp = append(resp, gin.H{
-			"user_id": m.UserID,
-			"role":    m.Role,
+		resp = append(resp, MemberResponse{
+			UserID: m.UserID,
+			Email:  m.Email,
+			Role:   string(m.Role),
 		})
 	}
 

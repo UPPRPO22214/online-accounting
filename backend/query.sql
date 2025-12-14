@@ -32,8 +32,7 @@ SELECT
     am.role
 FROM account_members am
 JOIN accounts a ON a.id = am.account_id
-WHERE am.user_id = ?
-ORDER BY a.id;
+WHERE am.user_id = ?;
 
 -- name: CreateAccount :execresult
 INSERT INTO accounts (name, description, owner_id)
@@ -60,8 +59,9 @@ WHERE account_id = ? AND user_id = ?
 LIMIT 1;
 
 -- name: ListAccountMembers :many
-SELECT user_id, role
-FROM account_members
+SELECT am.user_id, u.email, am.role
+FROM account_members am
+JOIN users u ON u.id = am.user_id
 WHERE account_id = ?;
 
 -- name: RemoveAccountMember :exec

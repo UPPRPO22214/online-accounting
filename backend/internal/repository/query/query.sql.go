@@ -214,13 +214,15 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, er
 }
 
 const listAccountMembers = `-- name: ListAccountMembers :many
-SELECT user_id, role
-FROM account_members
+SELECT am.user_id, u.email, am.role
+FROM account_members am
+JOIN users u ON u.id = am.user_id
 WHERE account_id = ?
 `
 
 type ListAccountMembersRow struct {
 	UserID int32
+	Email  string
 	Role   AccountMembersRole
 }
 
@@ -233,7 +235,7 @@ func (q *Queries) ListAccountMembers(ctx context.Context, accountID int32) ([]Li
 	var items []ListAccountMembersRow
 	for rows.Next() {
 		var i ListAccountMembersRow
-		if err := rows.Scan(&i.UserID, &i.Role); err != nil {
+		if err := rows.Scan(&i.UserID, &i.Email, &i.Role); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -328,7 +330,6 @@ SELECT
 FROM account_members am
 JOIN accounts a ON a.id = am.account_id
 WHERE am.user_id = ?
-ORDER BY a.id
 `
 
 type ListUserAccountsRow struct {
