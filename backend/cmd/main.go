@@ -56,7 +56,7 @@ func main() {
 	services := usecases.New(repo, jwtManager)
 
 	// HTTP Server
-	router := api.SetupRouter(services, jwtManager)
+	router := api.SetupRouter(services, jwtManager, db)
 
 	srv := &http.Server{
 		Addr:         ":8080",

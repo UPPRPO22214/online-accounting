@@ -14,6 +14,10 @@ definitions:
       owner_id:
         example: 42
         type: integer
+    required:
+    - id
+    - name
+    - owner_id
     type: object
   handlers.AccountRoleResponse:
     properties:
@@ -34,6 +38,8 @@ definitions:
         example: editor
         type: string
     required:
+    - id
+    - name
     - role
     type: object
   handlers.ChangePasswordRequest:
@@ -96,12 +102,29 @@ definitions:
       error:
         example: invalid credentials
         type: string
+    required:
+    - error
+    type: object
+  handlers.HealthResponse:
+    properties:
+      services:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        example: ok
+        type: string
+    required:
+    - services
+    - status
     type: object
   handlers.IDResponse:
     properties:
       id:
         example: 1
         type: integer
+    required:
+    - id
     type: object
   handlers.InviteMemberRequest:
     properties:
@@ -156,6 +179,8 @@ definitions:
       message:
         example: password changed successfully
         type: string
+    required:
+    - message
     type: object
   handlers.RegisterRequest:
     properties:
@@ -175,6 +200,8 @@ definitions:
       access_token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MDI1MDAwMDB9.abcdef123456
         type: string
+    required:
+    - access_token
     type: object
   handlers.TransactionResponse:
     properties:
@@ -199,6 +226,13 @@ definitions:
       user_id:
         example: 42
         type: integer
+    required:
+    - account_id
+    - amount
+    - id
+    - occurred_at
+    - title
+    - user_id
     type: object
   handlers.UpdateTransactionRequest:
     properties:
@@ -224,6 +258,9 @@ definitions:
       id:
         example: 1
         type: integer
+    required:
+    - email
+    - id
     type: object
 host: localhost:8080
 info:
@@ -877,6 +914,26 @@ paths:
       summary: Регистрация нового пользователя
       tags:
       - auth
+  /health:
+    get:
+      description: Возвращает статус сервиса и его зависимостей (база данных). Используется
+        для healthcheck в Docker и Kubernetes. Статус "ok" означает что все компоненты
+        работают нормально, "degraded" - частичные проблемы, "unavailable" - сервис
+        недоступен.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Сервис работает нормально, все зависимости доступны
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+        "503":
+          description: Сервис недоступен или имеются проблемы с зависимостями
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Проверка состояния сервиса
+      tags:
+      - health
   /transactions/{id}:
     delete:
       description: 'Удаляет транзакцию из счёта. Права доступа: Editor может удалять

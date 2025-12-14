@@ -924,6 +924,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/health": {
+            "get": {
+                "description": "Возвращает статус сервиса и его зависимостей (база данных). Используется для healthcheck в Docker и Kubernetes. Статус \"ok\" означает что все компоненты работают нормально, \"degraded\" - частичные проблемы, \"unavailable\" - сервис недоступен.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Проверка состояния сервиса",
+                "responses": {
+                    "200": {
+                        "description": "Сервис работает нормально, все зависимости доступны",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Сервис недоступен или имеются проблемы с зависимостями",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/{id}": {
             "delete": {
                 "security": [
@@ -1062,6 +1088,11 @@ const docTemplate = `{
     "definitions": {
         "handlers.AccountResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "owner_id"
+            ],
             "properties": {
                 "description": {
                     "type": "string",
@@ -1084,6 +1115,8 @@ const docTemplate = `{
         "handlers.AccountRoleResponse": {
             "type": "object",
             "required": [
+                "id",
+                "name",
                 "role"
             ],
             "properties": {
@@ -1189,6 +1222,9 @@ const docTemplate = `{
         },
         "handlers.ErrorResponse": {
             "type": "object",
+            "required": [
+                "error"
+            ],
             "properties": {
                 "error": {
                     "type": "string",
@@ -1196,8 +1232,30 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.HealthResponse": {
+            "type": "object",
+            "required": [
+                "services",
+                "status"
+            ],
+            "properties": {
+                "services": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
         "handlers.IDResponse": {
             "type": "object",
+            "required": [
+                "id"
+            ],
             "properties": {
                 "id": {
                     "type": "integer",
@@ -1273,6 +1331,9 @@ const docTemplate = `{
         },
         "handlers.MessageResponse": {
             "type": "object",
+            "required": [
+                "message"
+            ],
             "properties": {
                 "message": {
                     "type": "string",
@@ -1300,6 +1361,9 @@ const docTemplate = `{
         },
         "handlers.TokenResponse": {
             "type": "object",
+            "required": [
+                "access_token"
+            ],
             "properties": {
                 "access_token": {
                     "type": "string",
@@ -1309,6 +1373,14 @@ const docTemplate = `{
         },
         "handlers.TransactionResponse": {
             "type": "object",
+            "required": [
+                "account_id",
+                "amount",
+                "id",
+                "occurred_at",
+                "title",
+                "user_id"
+            ],
             "properties": {
                 "account_id": {
                     "type": "integer",
@@ -1364,6 +1436,10 @@ const docTemplate = `{
         },
         "handlers.UserProfileResponse": {
             "type": "object",
+            "required": [
+                "email",
+                "id"
+            ],
             "properties": {
                 "email": {
                     "type": "string",
