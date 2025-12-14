@@ -30,8 +30,8 @@ func NewAccountHandler(
 type Account struct {
 	ID          int32  `json:"id" example:"1"`
 	Name        string `json:"name" example:"Основной счёт"`
-	Description *string
-	Role        string
+	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
+	Role        string `json:"role" example:"admin"`
 }
 
 // CreateAccountRequest представляет данные для создания счёта
@@ -168,7 +168,7 @@ func (h *AccountHandler) GetAccount(c *gin.Context) {
 // @Tags         accounts
 // @Security     BearerAuth
 // @Produce      json
-// @Success      200 {array} []Account "Список счетов пользователя"
+// @Success      200 {array} Account "Список счетов пользователя"
 // @Failure      401 {object} ErrorResponse "Отсутствует или невалидный JWT токен"
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при получении счетов"
 // @Router       /accounts [get]

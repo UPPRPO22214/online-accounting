@@ -45,6 +45,7 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 	{
 		auth.POST("/change-password", authHandler.ChangePassword)
 		auth.GET("/profile", authHandler.GetProfile)
+		auth.POST("/logout", authHandler.Logout)
 	}
 
 	// Accounts

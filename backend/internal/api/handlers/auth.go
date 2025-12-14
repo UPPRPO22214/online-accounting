@@ -216,3 +216,29 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
 }
+
+// Logout godoc
+// @Summary      Выход из системы
+// @Description  Удаляет JWT токен из cookies браузера. На клиенте также рекомендуется очистить токен из localStorage/sessionStorage если он там хранится. После выхода требуется повторная авторизация для доступа к защищённым эндпоинтам.
+// @Tags         auth
+// @Produce      json
+// @Success      200 {object} MessageResponse "Успешный выход из системы"
+// @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера"
+// @Router       /auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+    // Удаляем access_token cookie
+    c.SetCookie(
+        "access_token",   // имя cookie
+        "",               // значение
+        -1,               // максимальный возраст: отрицательный = немедленное удаление
+        "/",              // путь
+        "",               // домен (оставить пустым для текущего домена)
+        false,            // Secure (false для HTTP, true для HTTPS)
+        true,             // HttpOnly (защита от XSS)
+    )
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "successfully logged out",
+        "success": true,
+    })
+}
