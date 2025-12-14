@@ -5,7 +5,7 @@ import { OperationDialogWindow } from './OperationDialogWindow';
 import { OpeartionsDashboard } from './OpeartionsDashboard';
 import { MembersPanel } from './MembersPanel';
 import { useAccount } from '@/entities/Account/api/useAccount';
-import { ErrorMessage, Loader } from '@/shared/ui';
+import { Loader } from '@/shared/ui';
 import { useMeMember } from '@/entities/AccountMember/api/useMeMember';
 
 export const AccountPage: React.FC = () => {
@@ -26,8 +26,10 @@ export const AccountPage: React.FC = () => {
   return (
     <div className="w-full">
       <Link href="/">На главную</Link>
-      <Loader isLoading={accountLoading || memberLoading} />
-      <ErrorMessage message={accountError?.message || memberError} />
+      <Loader
+        className="size-30 m-auto"
+        isLoading={accountLoading || memberLoading}
+      />
       {!account && accountError && (
         <h1 className="text-center text-2xl text-red-500">
           Счёт с ID {accountId} не найден

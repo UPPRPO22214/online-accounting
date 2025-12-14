@@ -56,11 +56,23 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
     resolver: zodResolver(memberSchema),
   });
 
-  const { createAccountMember } = useAccountMemberCreate(accountId);
-  const { updateAccountMember } = useAccountMemberUpdate(accountId, () => {
+  const {
+    createAccountMember,
+    isPending: createAccountMemberPending,
+    error: createAccountMemberError,
+  } = useAccountMemberCreate(accountId);
+  const {
+    updateAccountMember,
+    isPending: updateAccountMemberPending,
+    error: updateAccountMemberError,
+  } = useAccountMemberUpdate(accountId, () => {
     setEditingId(undefined);
   });
-  const { deleteAccountMember } = useAccountMemberDelete(accountId);
+  const {
+    deleteAccountMember,
+    isPending: deleteAccountMemberPending,
+    error: deleteAccountMemberError,
+  } = useAccountMemberDelete(accountId);
 
   return (
     <div
@@ -123,7 +135,11 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                               )}
                             </Select>
                             <Button onClick={() => setEditingId(undefined)}>
-                              <XMarkIcon className="size-4" />
+                              {updateAccountMemberPending ? (
+                                <Loader />
+                              ) : (
+                                <XMarkIcon className="size-4" />
+                              )}
                             </Button>
                           </>
                         ) : (
@@ -148,12 +164,21 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                               deleteAccountMember({ userId: member.user_id! });
                             }}
                           >
-                            {meMember.user_id === member.user_id
-                              ? 'Самоудалиться'
-                              : 'Удалить'}
+                            {deleteAccountMemberPending ? (
+                              <Loader />
+                            ) : (
+                              'Удалить'
+                            )}
                           </Button>
                         )}
                       </div>
+                      <ErrorMessage
+                        className="col-span-3 flex justify-center"
+                        message={
+                          updateAccountMemberError?.message ||
+                          deleteAccountMemberError?.message
+                        }
+                      />
                     </div>
                   ))}
                 </div>
@@ -179,13 +204,16 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                       ),
                     )}
                   </Select>
-                  <Button>Добавить</Button>
+                  <Button>
+                    {createAccountMemberPending ? <Loader /> : 'Добавить'}
+                  </Button>
                   <ErrorMessage
                     className="col-span-3 text-center"
                     message={
                       formState.errors.root?.message ||
                       formState.errors.email?.message ||
-                      formState.errors.role?.message
+                      formState.errors.role?.message ||
+                      createAccountMemberError?.message
                     }
                   />
                 </form>

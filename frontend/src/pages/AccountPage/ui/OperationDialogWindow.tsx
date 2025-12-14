@@ -12,7 +12,7 @@ import {
 import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams } from 'wouter';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { useOperationDialogStore } from '../model';
@@ -28,6 +28,7 @@ import {
   useTransactionDelete,
 } from '@/entities/Operation';
 import { useMeMember } from '@/entities/AccountMember/api';
+import { isoDateToDate } from '@/shared/types';
 
 export const OperationDialogWindow: React.FC = () => {
   const { accountId } = useParams<{ accountId: number }>();
@@ -73,6 +74,14 @@ export const OperationDialogWindow: React.FC = () => {
 
   const { meMember } = useMeMember(accountId);
 
+  const canChange = useMemo(
+    () =>
+      (checkRole(meMember?.role as MemberRole, 'editor') &&
+        (operation.user_id === meMember?.user_id || mode === 'create')) ||
+      checkRole(meMember?.role as MemberRole, 'admin'),
+    [meMember, mode, operation.user_id],
+  );
+
   return (
     <Dialog
       as="div"
@@ -95,13 +104,17 @@ export const OperationDialogWindow: React.FC = () => {
             'transition-base ease-out data-closed:transform-[scale(95%)] data-closed:opacity-0',
           )}
         >
-          {mode === 'show' ||
-          !checkRole(meMember?.role as MemberRole, 'editor') ? (
+          {mode === 'show' && (
             <>
               <DialogTitle as="h3" className="text-lg font-medium">
-                {operation.title} - {operation.category}
+                {operation.title}
               </DialogTitle>
-              <div className="mt-2 text-lg">Дата: {operation.occurred_at}</div>
+              <div className="mt-2 text-lg">
+                Дата:{' '}
+                {isoDateToDate
+                  .decode(operation.occurred_at!.split('T')[0])
+                  .toLocaleDateString()}
+              </div>
               <div className="mt-2 text-lg">
                 Сумма:{' '}
                 <span
@@ -120,7 +133,7 @@ export const OperationDialogWindow: React.FC = () => {
                 <Button className="px-2" onClick={close}>
                   Закрыть
                 </Button>
-                {checkRole(meMember?.role as MemberRole, 'editor') && (
+                {canChange && (
                   <>
                     <Button className="px-2" onClick={() => setMode('edit')}>
                       Изменить
@@ -137,15 +150,15 @@ export const OperationDialogWindow: React.FC = () => {
                 )}
               </div>
             </>
-          ) : (
+          )}
+          {canChange && mode !== 'show' && (
             <form
               className="text-lg grid grid-cols-1 gap-2"
               onSubmit={handleSubmit((state) => {
                 if (mode === 'create') {
                   createTransaction({ ...state, amount: `${state.amount}` });
                 } else {
-                  console.warn('IMPLEMENT UPDATE');
-                  // editOperation(accountId, state);
+                  console.warn('IMPLEMENT UPDATE'); // TODO: !!!
                 }
               })}
             >
@@ -158,15 +171,6 @@ export const OperationDialogWindow: React.FC = () => {
                 />
               </Field>
               <ErrorMessage message={formState.errors.title?.message} />
-              <Field className="flex justify-start items-center gap-x-2">
-                <Label>Категория</Label>
-                <input
-                  className="font-medium p-1 bg-gray-100"
-                  placeholder="Категория операции"
-                  {...register('category')}
-                />
-              </Field>
-              <ErrorMessage message={formState.errors.category?.message} />
               <Field className="flex justify-start items-center gap-x-2">
                 <Label>{isPeriodic ? 'Начальная дата' : 'Дата'}</Label>
                 <input

@@ -13,7 +13,6 @@ export const useMeMember = (accountId: number) => {
 
   const [meMember, setMeMember] = useState<HandlersMemberResponse>();
   useEffect(() => {
-    console.log(members, user);
     if (!members || !user) return;
     setMeMember(members.find((member) => member.user_id === user?.id));
   }, [members, user]);
