@@ -1,3 +1,9 @@
+-- name: GetUserByID :one
+SELECT id, email
+FROM users
+WHERE id = ?
+LIMIT 1;
+
 -- name: GetUserByEmail :one
 SELECT *
 FROM users
