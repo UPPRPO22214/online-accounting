@@ -45,7 +45,7 @@ services:
       context: ../
       dockerfile: docker/Dockerfile.back.dev
     image: accounter
-    env_file: .env
+    env_file: ../backend/.env
     ports:
       - "8080:8080"
     depends_on:

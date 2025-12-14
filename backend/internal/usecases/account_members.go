@@ -73,6 +73,7 @@ func (s *AccountMemberService) Remove(
 	return s.members.RemoveMember(ctx, accountID, userID)
 }
 
+// maybe IsMember
 func (s *AccountMemberService) requireOwner(
 	ctx context.Context,
 	accountID int,

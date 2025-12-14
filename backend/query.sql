@@ -1,3 +1,9 @@
+-- name: GetUserByID :one
+SELECT id, email
+FROM users
+WHERE id = ?
+LIMIT 1;
+
 -- name: GetUserByEmail :one
 SELECT *
 FROM users
@@ -17,6 +23,17 @@ VALUES (?, ?);
 UPDATE users
 SET password_hash = ?
 WHERE id = ?;
+
+-- name: ListUserAccounts :many
+SELECT
+    a.id,
+    a.name,
+    a.description,
+    am.role
+FROM account_members am
+JOIN accounts a ON a.id = am.account_id
+WHERE am.user_id = ?
+ORDER BY a.id;
 
 -- name: CreateAccount :execresult
 INSERT INTO accounts (name, description, owner_id)
@@ -41,6 +58,11 @@ SELECT role
 FROM account_members
 WHERE account_id = ? AND user_id = ?
 LIMIT 1;
+
+-- name: ListAccountMembers :many
+SELECT user_id, role
+FROM account_members
+WHERE account_id = ?;
 
 -- name: RemoveAccountMember :exec
 DELETE FROM account_members

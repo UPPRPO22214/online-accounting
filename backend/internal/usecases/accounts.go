@@ -21,13 +21,7 @@ func newAccountService(repo *repository.Repository) *AccountService {
 	}
 }
 
-func (s *AccountService) CreateAccount(
-	ctx context.Context,
-	userID int,
-	name string,
-	description *string,
-) (int, error) {
-
+func (s *AccountService) CreateAccount(ctx context.Context, userID int, name string, description *string) (int, error) {
 	accountID, err := s.accounts.CreateAccount(ctx, userID, name, description)
 	if err != nil {
 		return 0, err
@@ -47,11 +41,7 @@ func (s *AccountService) CreateAccount(
 	return accountID, nil
 }
 
-func (s *AccountService) GetAccountByID(
-	ctx context.Context,
-	accountID int,
-) (*query.Account, error) {
-
+func (s *AccountService) GetAccountByID(ctx context.Context, accountID int) (*query.Account, error) {
 	acc, err := s.accounts.GetAccountByID(ctx, accountID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -63,12 +53,21 @@ func (s *AccountService) GetAccountByID(
 	return acc, nil
 }
 
-func (s *AccountService) DeleteAccount(
-	ctx context.Context,
-	accountID int,
-	userID int,
-) error {
+func (s *AccountService) ListForUser(ctx context.Context, userID int) ([]query.ListUserAccountsRow, error) {
+	return s.accounts.ListUserAccounts(ctx, userID)
+}
 
+func (s *AccountService) ListMembers(ctx context.Context, accountID int, userID int) ([]query.ListAccountMembersRow, error) {
+	// Проверяем, что пользователь вообще участник счёта
+	_, err := s.members.GetMemberRole(ctx, accountID, userID)
+	if err != nil {
+		return nil, ErrForbidden
+	}
+
+	return s.members.ListMembers(ctx, accountID)
+}
+
+func (s *AccountService) DeleteAccount(ctx context.Context, accountID int, userID int) error {
 	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
