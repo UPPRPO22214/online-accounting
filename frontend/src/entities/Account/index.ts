@@ -1,3 +1,3 @@
 export type { Account } from './types';
 
-export { useAccount, useAccountCreate } from './api';
+export { useAccount, useAccounts, useAccountCreate } from './api';

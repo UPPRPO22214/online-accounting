@@ -18,8 +18,8 @@ export const checkRole = (
       return true;
     case 'admin':
       return requiredRole !== 'owner';
-    case 'contributor':
-      return requiredRole === 'contributor' || requiredRole === 'viewer';
+    case 'editor':
+      return requiredRole === 'editor' || requiredRole === 'viewer';
     case 'viewer':
       return requiredRole === 'viewer';
   }

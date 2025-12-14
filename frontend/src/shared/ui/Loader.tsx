@@ -3,18 +3,22 @@ import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 
 type LoaderProps = HTMLAttributes<SVGElement> & {
-  isLoading: boolean;
+  isLoading?: boolean;
 };
 
 export const Loader: React.FC<LoaderProps> = ({
-  isLoading,
+  isLoading = true,
   className,
   ...props
 }) => {
   return (
-    <CogIcon
-      className={clsx('size-4', isLoading && 'animate-spin', className)}
-      {...props}
-    />
+    <>
+      {isLoading && (
+        <CogIcon
+          className={clsx('size-4 transition-base animate-spin', className)}
+          {...props}
+        />
+      )}
+    </>
   );
 };

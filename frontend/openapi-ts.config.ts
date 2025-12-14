@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
-  input: 'openapi.json',
+  input: '../backend/docs/swagger.json',
   output: {
     case: 'camelCase',
     format: 'prettier',

@@ -30,10 +30,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/handlers.Account"
-                                }
+                                "$ref": "#/definitions/handlers.Account"
                             }
                         }
                     },
@@ -1148,22 +1145,9 @@
             }
         },
         "handlers.MembersListResponse": {
-            "type": "object",
-            "properties": {
-                "account_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "count": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "members": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.MemberResponse"
-                    }
-                }
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/handlers.MemberResponse"
             }
         },
         "handlers.MessageResponse": {

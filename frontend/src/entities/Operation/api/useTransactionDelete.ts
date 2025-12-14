@@ -16,7 +16,7 @@ export const useTransactionDelete = (
         }),
       ),
     onSuccess: () => {
-      queryClient.refetchQueries({
+      queryClient.resetQueries({
         queryKey: getTransactionsQueryOptions(accountId).queryKey,
       });
       onSuccess?.();

@@ -1,15 +1,14 @@
 import clsx from 'clsx';
-import { useEffect, useState, type HTMLAttributes } from 'react';
+import { type HTMLAttributes } from 'react';
 import type React from 'react';
 
-import { useAccountOperationsStore, useOperationDialogStore } from '../model';
+import { useOperationDialogStore } from '../model';
 import { Button } from '@/shared/ui';
 import { OperationTableRow } from './OperationTableRow';
-import {
-  checkRole,
-  getMyRole,
-  type AccountMember,
-} from '@/entities/AccountMember';
+import { checkRole } from '@/entities/AccountMember';
+import { useTransactions } from '@/entities/Operation';
+import type { MemberRole } from '@/entities/AccountMember/types';
+import { useMeMember } from '@/entities/AccountMember/api';
 
 type OperationsTableProps = HTMLAttributes<HTMLDivElement> & {
   accountId: number;
@@ -20,16 +19,13 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
   className,
   ...props
 }) => {
-  const operations = useAccountOperationsStore((state) => state.operations);
+  const { transactions } = useTransactions(accountId);
 
   const openNewOpeationDialog = useOperationDialogStore(
     (state) => state.openNew,
   );
 
-  const [meMember, setMeMember] = useState<AccountMember>();
-  useEffect(() => {
-    setMeMember(getMyRole(accountId));
-  }, [accountId]);
+  const { meMember } = useMeMember(accountId);
 
   return (
     <div className={clsx('grid grid-cols-1', className)} {...props}>
@@ -38,7 +34,7 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
         <span>Название</span>
         <span>Значение</span>
       </div>
-      {meMember && checkRole(meMember.role, 'contributor') && (
+      {meMember && checkRole(meMember.role as MemberRole, 'editor') && (
         <Button
           className="cursor-pointer text-xl font-bold border border-t-0"
           variant="white"
@@ -47,7 +43,7 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
           +
         </Button>
       )}
-      {operations.map((operation) => (
+      {transactions?.map((operation) => (
         <OperationTableRow key={operation.id} operation={operation} />
       ))}
     </div>

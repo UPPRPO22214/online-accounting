@@ -24,7 +24,7 @@ export const useTransactionCreate = (
       ),
     onSuccess: (response) => {
       if (response.id)
-        queryClient.refetchQueries({
+        queryClient.resetQueries({
           queryKey: getTransactionsQueryOptions(accountId).queryKey,
         });
       onSuccess?.(response);

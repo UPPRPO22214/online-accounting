@@ -1,4 +1,4 @@
-import type { Operation } from '@/entities/Operation';
+import type { OperationStatData } from '@/entities/Operation';
 import { getChartDataset } from './chartDatasetsTypes';
 import { describe, expect, test } from 'vitest';
 
@@ -8,12 +8,10 @@ describe('Chart datasets accumulated tests', () => {
   });
 
   test('One income accumulated', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: 100,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'accumulate')).toStrictEqual({
@@ -24,12 +22,10 @@ describe('Chart datasets accumulated tests', () => {
   });
 
   test('One outcome accumulated', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: -100,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'accumulate')).toStrictEqual({
@@ -40,18 +36,14 @@ describe('Chart datasets accumulated tests', () => {
   });
 
   test('Two accumulated', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: -100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-11',
         amount: 100,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'accumulate')).toStrictEqual({
@@ -62,42 +54,30 @@ describe('Chart datasets accumulated tests', () => {
   });
 
   test('Normal', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: -100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-12',
         amount: 100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-13',
         amount: -1000,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-14',
         amount: 2000,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-15',
         amount: 100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-19',
         amount: -1,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'accumulate')).toStrictEqual({
@@ -121,12 +101,10 @@ describe('Chart datasets separated tests', () => {
   });
 
   test('One income separated', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: 100,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'separate')).toStrictEqual({
@@ -137,12 +115,10 @@ describe('Chart datasets separated tests', () => {
   });
 
   test('One outcome separated', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: -100,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'separate')).toStrictEqual({
@@ -153,18 +129,14 @@ describe('Chart datasets separated tests', () => {
   });
 
   test('Two separated', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: -100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-11',
         amount: 100,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'separate')).toStrictEqual({
@@ -175,42 +147,30 @@ describe('Chart datasets separated tests', () => {
   });
 
   test('Normal', () => {
-    const operations: Operation[] = [
+    const operations: OperationStatData[] = [
       {
-        id: '',
         date: '2025-11-11',
         amount: -100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-12',
         amount: 100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-13',
         amount: -1000,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-14',
         amount: 2000,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-15',
         amount: 100,
-        description: '',
       },
       {
-        id: '',
         date: '2025-11-19',
         amount: -1,
-        description: '',
       },
     ];
     expect(getChartDataset(operations, 'separate')).toStrictEqual({

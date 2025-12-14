@@ -21,11 +21,13 @@ import {
   operationSchema,
   type OperationFormType,
 } from '../types/operationFormTypes';
-import { periodsLabels, type Operation } from '@/entities/Operation/types';
+import { periodsLabels } from '@/entities/Operation/types';
+import { checkRole, type MemberRole } from '@/entities/AccountMember';
 import {
-  checkRole,
-  type AccountMember,
-} from '@/entities/AccountMember';
+  useTransactionCreate,
+  useTransactionDelete,
+} from '@/entities/Operation';
+import { useMeMember } from '@/entities/AccountMember/api';
 
 export const OperationDialogWindow: React.FC = () => {
   const { accountId } = useParams<{ accountId: number }>();
@@ -43,13 +45,12 @@ export const OperationDialogWindow: React.FC = () => {
     });
   useEffect(() => {
     const defaultOpeationValues: OperationFormType = {
-      description: operation.description,
-      amount: operation.amount,
-      date: operation.date,
-      period: operation.periodic?.period,
-      ended_at: operation.periodic?.ended_at,
+      title: operation.title!,
+      amount: Number.parseFloat(operation.amount!),
+      occured_at: operation.occurred_at!,
+      is_periodic: !!operation.is_periodic,
     };
-    setIsPeriodic(!!operation.periodic);
+    setIsPeriodic(!!operation.is_periodic);
     setDefaultOperation(defaultOpeationValues);
   }, [operation]);
 
@@ -59,10 +60,18 @@ export const OperationDialogWindow: React.FC = () => {
   });
   const [isPeriodic, setIsPeriodic] = useState(false);
 
-  // const [meMember, setMeMember] = useState<AccountMember>();
-  // useEffect(() => {
-  //   setMeMember(getMyRole(accountId));
-  // }, [accountId]);
+  const { createTransaction } = useTransactionCreate(accountId, () => {
+    close();
+  });
+  const { deleteTransaction } = useTransactionDelete(
+    accountId,
+    operation.id!,
+    () => {
+      close();
+    },
+  );
+
+  const { meMember } = useMeMember(accountId);
 
   return (
     <Dialog
@@ -86,20 +95,22 @@ export const OperationDialogWindow: React.FC = () => {
             'transition-base ease-out data-closed:transform-[scale(95%)] data-closed:opacity-0',
           )}
         >
-          {mode === 'show' || !checkRole(meMember?.role, 'contributor') ? (
+          {mode === 'show' ||
+          !checkRole(meMember?.role as MemberRole, 'editor') ? (
             <>
               <DialogTitle as="h3" className="text-lg font-medium">
-                {operation.description}
+                {operation.title} - {operation.category}
               </DialogTitle>
-              <div className="mt-2 text-lg">Дата: {operation.date}</div>
+              <div className="mt-2 text-lg">Дата: {operation.occurred_at}</div>
               <div className="mt-2 text-lg">
                 Сумма:{' '}
                 <span
                   className={clsx(
                     'font-mono p-1',
-                    operation.amount > 0 && 'bg-green-300',
-                    operation.amount === 0 && 'bg-yellow-200',
-                    operation.amount < 0 && 'bg-red-300',
+                    Number.parseFloat(operation.amount!) > 0 && 'bg-green-300',
+                    Number.parseFloat(operation.amount!) === 0 &&
+                      'bg-yellow-200',
+                    Number.parseFloat(operation.amount!) < 0 && 'bg-red-300',
                   )}
                 >
                   {operation.amount}
@@ -109,7 +120,7 @@ export const OperationDialogWindow: React.FC = () => {
                 <Button className="px-2" onClick={close}>
                   Закрыть
                 </Button>
-                {checkRole(meMember?.role, 'contributor') && (
+                {checkRole(meMember?.role as MemberRole, 'editor') && (
                   <>
                     <Button className="px-2" onClick={() => setMode('edit')}>
                       Изменить
@@ -117,9 +128,7 @@ export const OperationDialogWindow: React.FC = () => {
                     <Button
                       className="px-2"
                       onClick={() => {
-                        deleteOperation(operation.id, accountId);
-                        close();
-                        location.reload();
+                        deleteTransaction();
                       }}
                     >
                       Удалить
@@ -132,30 +141,12 @@ export const OperationDialogWindow: React.FC = () => {
             <form
               className="text-lg grid grid-cols-1 gap-2"
               onSubmit={handleSubmit((state) => {
-                const newOperation: Operation = {
-                  amount: state.amount,
-                  description: state.description,
-                  date: state.date,
-                  id: mode === 'create' ? crypto.randomUUID() : operation.id,
-                  periodic:
-                    isPeriodic && state.period
-                      ? {
-                          period: state.period,
-                          started_at: state.date,
-                          ended_at:
-                            state.ended_at && state.ended_at !== ''
-                              ? state.ended_at
-                              : undefined,
-                        }
-                      : undefined,
-                };
                 if (mode === 'create') {
-                  createOperation(accountId, newOperation);
+                  createTransaction({ ...state, amount: `${state.amount}` });
                 } else {
-                  editOperation(accountId, newOperation);
+                  console.warn('IMPLEMENT UPDATE');
+                  // editOperation(accountId, state);
                 }
-                close();
-                location.reload();
               })}
             >
               <Field className="flex justify-start items-center gap-x-2">
@@ -163,19 +154,28 @@ export const OperationDialogWindow: React.FC = () => {
                 <input
                   className="font-medium p-1 bg-gray-100"
                   placeholder="Описание операции"
-                  {...register('description')}
+                  {...register('title')}
                 />
               </Field>
-              <ErrorMessage message={formState.errors.description?.message} />
+              <ErrorMessage message={formState.errors.title?.message} />
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>Категория</Label>
+                <input
+                  className="font-medium p-1 bg-gray-100"
+                  placeholder="Категория операции"
+                  {...register('category')}
+                />
+              </Field>
+              <ErrorMessage message={formState.errors.category?.message} />
               <Field className="flex justify-start items-center gap-x-2">
                 <Label>{isPeriodic ? 'Начальная дата' : 'Дата'}</Label>
                 <input
                   className="p-1 bg-gray-100"
                   type="date"
-                  {...register('date')}
+                  {...register('occured_at')}
                 />
               </Field>
-              <ErrorMessage message={formState.errors.date?.message} />
+              <ErrorMessage message={formState.errors.occured_at?.message} />
               <Field className="flex justify-start items-center gap-x-2">
                 <Label>Сумма</Label>
                 <input
@@ -207,7 +207,8 @@ export const OperationDialogWindow: React.FC = () => {
                 <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
                   <Field className="flex justify-start items-center gap-x-2">
                     <Label>Период</Label>
-                    <Select className="border-1" {...register('period')}>
+                    {/* <Select className="border-1" {...register('period')}> */}
+                    <Select className="border-1">
                       {Object.entries(periodsLabels).map(([period, label]) => (
                         <option label={label} value={period} key={period}>
                           {period}
@@ -215,21 +216,6 @@ export const OperationDialogWindow: React.FC = () => {
                       ))}
                     </Select>
                   </Field>
-                  <ErrorMessage message={formState.errors.period?.message} />
-                  <Field className="flex justify-start items-center gap-x-2">
-                    <Label>Дата окончания периода</Label>
-                    <input
-                      className="p-1 bg-gray-100"
-                      type="date"
-                      {...register('ended_at', {
-                        setValueAs: (value) => {
-                          if (value === '') return undefined;
-                          return value;
-                        },
-                      })}
-                    />
-                  </Field>
-                  <ErrorMessage message={formState.errors.ended_at?.message} />
                 </div>
               </Transition>
               <div className="flex justify-around">

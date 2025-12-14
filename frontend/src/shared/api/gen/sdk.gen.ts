@@ -14,10 +14,19 @@ import type {
   DeleteTransactionsByIdResponses,
   GetAccountsByIdData,
   GetAccountsByIdErrors,
+  GetAccountsByIdMembersData,
+  GetAccountsByIdMembersErrors,
+  GetAccountsByIdMembersResponses,
   GetAccountsByIdResponses,
   GetAccountsByIdTransactionsData,
   GetAccountsByIdTransactionsErrors,
   GetAccountsByIdTransactionsResponses,
+  GetAccountsData,
+  GetAccountsErrors,
+  GetAccountsResponses,
+  GetAuthProfileData,
+  GetAuthProfileErrors,
+  GetAuthProfileResponses,
   PatchAccountsByIdMembersByUserIdData,
   PatchAccountsByIdMembersByUserIdErrors,
   PatchAccountsByIdMembersByUserIdResponses,
@@ -57,6 +66,20 @@ export type Options<
    */
   meta?: Record<string, unknown>;
 };
+
+/**
+ * Получение списка счетов пользователя
+ *
+ * Возвращает все счета, к которым пользователь имеет доступ (включая счета, где пользователь является участником). Список включает как собственные счета (роль Owner), так и счета, к которым пользователь был приглашён (роли Participant, Viewer и т.д.)
+ */
+export const getAccounts = <ThrowOnError extends boolean = false>(
+  options?: Options<GetAccountsData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<
+    GetAccountsResponses,
+    GetAccountsErrors,
+    ThrowOnError
+  >({ url: '/accounts', ...options });
 
 /**
  * Создание нового счёта
@@ -106,6 +129,20 @@ export const getAccountsById = <ThrowOnError extends boolean = false>(
     GetAccountsByIdErrors,
     ThrowOnError
   >({ url: '/accounts/{id}', ...options });
+
+/**
+ * Получение списка участников счёта
+ *
+ * Возвращает список пользователей с доступом к счёту и их ролями
+ */
+export const getAccountsByIdMembers = <ThrowOnError extends boolean = false>(
+  options: Options<GetAccountsByIdMembersData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    GetAccountsByIdMembersResponses,
+    GetAccountsByIdMembersErrors,
+    ThrowOnError
+  >({ url: '/accounts/{id}/members', ...options });
 
 /**
  * Приглашение участника в счёт
@@ -247,6 +284,20 @@ export const postAuthLogin = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   });
+
+/**
+ * Получение профиля пользователя
+ *
+ * Возвращает информацию о текущем аутентифицированном пользователе на основе JWT токена. Включает основные данные пользователя (ID, email). Для получения профиля требуется валидный JWT токен.
+ */
+export const getAuthProfile = <ThrowOnError extends boolean = false>(
+  options?: Options<GetAuthProfileData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<
+    GetAuthProfileResponses,
+    GetAuthProfileErrors,
+    ThrowOnError
+  >({ url: '/auth/profile', ...options });
 
 /**
  * Регистрация нового пользователя

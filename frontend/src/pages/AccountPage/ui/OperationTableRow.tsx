@@ -2,12 +2,12 @@ import clsx from 'clsx';
 import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 import { useOperationDialogStore } from '../model';
-import { getAmountColorClass } from '@/shared/ui/getAmountColorClsss';
-import { type Operation } from '@/entities/Operation';
+import { getAmountColorClass } from '@/shared/ui/getAmountColorClass';
 import { isoDateToDate } from '@/shared/types';
+import type { HandlersTransactionResponse } from '@/shared/api';
 
 type OperationsTableProps = HTMLAttributes<HTMLButtonElement> & {
-  operation: Operation;
+  operation: HandlersTransactionResponse;
 };
 
 export const OperationTableRow: React.FC<OperationsTableProps> = ({
@@ -18,7 +18,7 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
   const [amountColor, setAmountColor] = useState<string>();
 
   useEffect(() => {
-    setAmountColor(getAmountColorClass(operation.amount));
+    setAmountColor(getAmountColorClass(Number.parseFloat(operation.amount!)));
   }, [operation]);
 
   return (
@@ -36,9 +36,11 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
       {operation ? (
         <>
           <span className="p-1">
-            {isoDateToDate.decode(operation.date).toLocaleDateString()}
+            {isoDateToDate
+              .decode(operation.occurred_at!.split('T')[0])
+              .toLocaleDateString()}
           </span>
-          <span className="p-1 border-x">{operation.description}</span>
+          <span className="p-1 border-x">{operation.title}</span>
           <span className={clsx('font-mono p-1', amountColor)}>
             {operation.amount}
           </span>

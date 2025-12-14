@@ -16,7 +16,7 @@ type OwnRequestResult<Data = unknown, TError = unknown> = Promise<
 
 type DataExtractorWrapper = <D>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  promise: OwnRequestResult<D, any>
+  promise: OwnRequestResult<D, any>,
 ) => Promise<D>;
 
 export const dataExtractionWrapper: DataExtractorWrapper = (responsePromise) =>

@@ -5,16 +5,16 @@ import { getProfileQueryOptions } from './useProfile';
 export const useRegister = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
   const { mutate: register, ...rest } = useMutation({
-    mutationFn: (data: {email: string, password: string}) =>
+    mutationFn: (data: { email: string; password: string }) =>
       dataExtractionWrapper(
         postAuthRegister({
           body: {
-            ...data
+            ...data,
           },
-        })
+        }),
       ),
     onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: getProfileQueryOptions().queryKey })
+      queryClient.resetQueries({ queryKey: getProfileQueryOptions().queryKey });
       onSuccess?.();
     },
   });

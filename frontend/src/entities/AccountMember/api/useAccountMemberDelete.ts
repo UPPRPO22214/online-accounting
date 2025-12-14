@@ -11,17 +11,17 @@ export const useAccountMemberDelete = (
 ) => {
   const queryClient = useQueryClient();
   const { mutate: deleteAccountMember, ...rest } = useMutation({
-    mutationFn: (data: {userId: number}) =>
+    mutationFn: (data: { userId: number }) =>
       dataExtractionWrapper(
         deleteAccountsByIdMembersByUserId({
           path: {
             id: accountId,
-            user_id: data.userId
+            user_id: data.userId,
           },
         }),
       ),
     onSuccess: () => {
-      queryClient.refetchQueries({
+      queryClient.resetQueries({
         queryKey: getAccountMembersQueryOptions(accountId).queryKey,
       });
       onSuccess?.();

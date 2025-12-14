@@ -2,8 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   dataExtractionWrapper,
   patchAccountsByIdMembersByUserId,
+  type HandlersChangeRoleRequest,
   type HandlersMessageResponse,
-  type PostAccountsByIdMembersData,
 } from '@/shared/api';
 import { getAccountMembersQueryOptions } from './useAccountMembers';
 
@@ -13,20 +13,23 @@ export const useAccountMemberUpdate = (
 ) => {
   const queryClient = useQueryClient();
   const { mutate: updateAccountMember, ...rest } = useMutation({
-    mutationFn: (data: {body: PostAccountsByIdMembersData['body'], userId: number}) =>
+    mutationFn: (data: {
+      role: HandlersChangeRoleRequest['role'];
+      userId: number;
+    }) =>
       dataExtractionWrapper(
         patchAccountsByIdMembersByUserId({
           body: {
-            ...data.body,
+            role: data.role,
           },
           path: {
             id: accountId,
-            user_id: data.userId
+            user_id: data.userId,
           },
         }),
       ),
     onSuccess: (response) => {
-      queryClient.refetchQueries({
+      queryClient.resetQueries({
         queryKey: getAccountMembersQueryOptions(accountId).queryKey,
       });
       onSuccess?.(response);

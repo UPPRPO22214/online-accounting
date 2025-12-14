@@ -9,3 +9,7 @@ export const periodsLabels: Record<Period, string> = {
 
 export const periods = Object.keys(periodsLabels) as Period[];
 
+export type OperationStatData = {
+  amount: number;
+  date: string;
+};

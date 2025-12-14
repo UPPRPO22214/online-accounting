@@ -25,7 +25,7 @@ export const useAccountMemberCreate = (
         }),
       ),
     onSuccess: (response) => {
-      queryClient.refetchQueries({
+      queryClient.resetQueries({
         queryKey: getAccountMembersQueryOptions(accountId).queryKey,
       });
       onSuccess?.(response);

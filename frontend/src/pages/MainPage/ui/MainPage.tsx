@@ -3,11 +3,11 @@ import type React from 'react';
 import { LoginForm } from './LoginForm';
 import { ProfileLayout } from './ProfileLayout';
 import { RegisterForm } from './RegisterForm';
-import { type User } from '@/entities/User';
 import { useProfile } from '@/entities/User/api';
+import { ErrorMessage } from '@/shared/ui';
 
 export const MainPage: React.FC = () => {
-  const { profile, isLoading, error } = useProfile()
+  const { user, error } = useProfile();
 
   return (
     <div className="w-full flex-col items-center text-center">
@@ -20,6 +20,7 @@ export const MainPage: React.FC = () => {
           <RegisterForm className="w-full h-fit" />
         </div>
       )}
+      <ErrorMessage message={error?.message} />
     </div>
   );
 };

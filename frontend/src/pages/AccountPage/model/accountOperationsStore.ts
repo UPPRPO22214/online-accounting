@@ -1,4 +1,4 @@
-import { type Operation, sortOperations } from '@/entities/Operation';
+import { type OperationStatData, sortOperations } from '@/entities/Operation';
 import { createWrappedStore } from '@/shared/store';
 import {
   getChartDataset,
@@ -6,11 +6,11 @@ import {
 } from '../types/chartDatasetsTypes';
 
 type AccountOperationsStoreType = {
-  operations: Operation[];
+  operations: OperationStatData[];
   totalAmount: number;
   chartsDatasets: ChartsDatasets;
 
-  set: (operations: Operation[]) => void;
+  set: (operations: OperationStatData[]) => void;
 };
 
 export const useAccountOperationsStore =

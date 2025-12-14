@@ -1,11 +1,10 @@
-import type { Operation } from '@/entities/Operation';
 import type { HandlersTransactionResponse } from '@/shared/api';
 import { createWrappedStore } from '@/shared/store';
 
-const NEW_OPERATION: Omit<Operation, 'id'> = {
-  date: new Date().toDateString(),
-  amount: 0,
-  description: '',
+const NEW_OPERATION: Omit<HandlersTransactionResponse, 'id'> = {
+  occurred_at: new Date().toDateString(),
+  amount: '0',
+  title: '',
 };
 
 type OpeartionFormMode = 'show' | 'edit' | 'create';
@@ -15,7 +14,7 @@ type OperationDialogStoreType = {
   mode: OpeartionFormMode;
   operation: HandlersTransactionResponse;
 
-  open: (operation: Operation) => void;
+  open: (operation: HandlersTransactionResponse) => void;
   openNew: () => void;
   close: () => void;
   setMode: (mode: OpeartionFormMode) => void;
@@ -26,7 +25,7 @@ export const useOperationDialogStore =
     (mutate) => ({
       opened: false,
       mode: 'create',
-      operation: { ...NEW_OPERATION, id: crypto.randomUUID() },
+      operation: { ...NEW_OPERATION },
 
       open: (operation) =>
         mutate((state) => {
@@ -38,7 +37,7 @@ export const useOperationDialogStore =
         mutate((state) => {
           state.opened = true;
           state.mode = 'create';
-          state.operation = { ...NEW_OPERATION, id: crypto.randomUUID() };
+          state.operation = { ...NEW_OPERATION };
         }),
       close: () =>
         mutate((state) => {

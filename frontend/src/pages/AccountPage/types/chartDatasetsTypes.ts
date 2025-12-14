@@ -1,4 +1,4 @@
-import type { Operation } from '@/entities/Operation';
+import type { OperationStatData } from '@/entities/Operation';
 import { isoDateToDate } from '@/shared/types';
 
 type ChartVariants = 'accumulate' | 'separate';
@@ -12,7 +12,7 @@ type OperationsChartDatasetDraft = {
 export type ChartsDatasets = Record<ChartVariants, OperationsChartDatasetDraft>;
 
 export const getChartDataset = (
-  operations: Operation[],
+  operations: OperationStatData[],
   variant: ChartVariants,
 ) => {
   if (operations.length === 0) return;
@@ -24,7 +24,9 @@ export const getChartDataset = (
   for (const operation of operations) {
     if (operation.amount === 0) continue;
 
-    const opDate = isoDateToDate.decode(operation.date).toLocaleDateString();
+    const opDate = isoDateToDate
+      .decode(operation.date.split('T')[0])
+      .toLocaleDateString();
 
     const len = preData.date.length;
     const lastDate = preData.date.at(-1);

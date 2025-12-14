@@ -4,6 +4,13 @@ export type ClientOptions = {
   baseUrl: 'localhost:8080/' | (string & {});
 };
 
+export type HandlersAccount = {
+  description?: string;
+  id?: number;
+  name?: string;
+  role?: string;
+};
+
 export type HandlersAccountResponse = {
   description?: string;
   id?: number;
@@ -50,6 +57,13 @@ export type HandlersLoginRequest = {
   password: string;
 };
 
+export type HandlersMemberResponse = {
+  role?: string;
+  user_id?: number;
+};
+
+export type HandlersMembersListResponse = Array<HandlersMemberResponse>;
+
 export type HandlersMessageResponse = {
   message?: string;
 };
@@ -73,6 +87,41 @@ export type HandlersTransactionResponse = {
   title?: string;
   user_id?: number;
 };
+
+export type HandlersUserProfileResponse = {
+  email?: string;
+  id?: number;
+};
+
+export type GetAccountsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/accounts';
+};
+
+export type GetAccountsErrors = {
+  /**
+   * Отсутствует или невалидный JWT токен
+   */
+  401: HandlersErrorResponse;
+  /**
+   * Внутренняя ошибка сервера при получении счетов
+   */
+  500: HandlersErrorResponse;
+};
+
+export type GetAccountsError = GetAccountsErrors[keyof GetAccountsErrors];
+
+export type GetAccountsResponses = {
+  /**
+   * Список счетов пользователя
+   */
+  200: Array<HandlersAccount>;
+};
+
+export type GetAccountsResponse =
+  GetAccountsResponses[keyof GetAccountsResponses];
 
 export type PostAccountsData = {
   /**
@@ -203,6 +252,54 @@ export type GetAccountsByIdResponses = {
 
 export type GetAccountsByIdResponse =
   GetAccountsByIdResponses[keyof GetAccountsByIdResponses];
+
+export type GetAccountsByIdMembersData = {
+  body?: never;
+  path: {
+    /**
+     * ID счёта
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/accounts/{id}/members';
+};
+
+export type GetAccountsByIdMembersErrors = {
+  /**
+   * Неверный ID счёта
+   */
+  400: HandlersErrorResponse;
+  /**
+   * Требуется аутентификация
+   */
+  401: HandlersErrorResponse;
+  /**
+   * Недостаточно прав
+   */
+  403: HandlersErrorResponse;
+  /**
+   * Счёт не найден
+   */
+  404: HandlersErrorResponse;
+  /**
+   * Внутренняя ошибка сервера
+   */
+  500: HandlersErrorResponse;
+};
+
+export type GetAccountsByIdMembersError =
+  GetAccountsByIdMembersErrors[keyof GetAccountsByIdMembersErrors];
+
+export type GetAccountsByIdMembersResponses = {
+  /**
+   * Список участников
+   */
+  200: HandlersMembersListResponse;
+};
+
+export type GetAccountsByIdMembersResponse =
+  GetAccountsByIdMembersResponses[keyof GetAccountsByIdMembersResponses];
 
 export type PostAccountsByIdMembersData = {
   /**
@@ -549,6 +646,41 @@ export type PostAuthLoginResponses = {
 
 export type PostAuthLoginResponse =
   PostAuthLoginResponses[keyof PostAuthLoginResponses];
+
+export type GetAuthProfileData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/auth/profile';
+};
+
+export type GetAuthProfileErrors = {
+  /**
+   * Отсутствует или невалидный JWT токен
+   */
+  401: HandlersErrorResponse;
+  /**
+   * Пользователь не найден (редкий случай, если пользователь удалён)
+   */
+  404: HandlersErrorResponse;
+  /**
+   * Внутренняя ошибка сервера
+   */
+  500: HandlersErrorResponse;
+};
+
+export type GetAuthProfileError =
+  GetAuthProfileErrors[keyof GetAuthProfileErrors];
+
+export type GetAuthProfileResponses = {
+  /**
+   * Профиль пользователя
+   */
+  200: HandlersUserProfileResponse;
+};
+
+export type GetAuthProfileResponse =
+  GetAuthProfileResponses[keyof GetAuthProfileResponses];
 
 export type PostAuthRegisterData = {
   /**

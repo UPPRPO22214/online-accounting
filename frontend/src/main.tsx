@@ -9,7 +9,7 @@ import { App } from '@/app';
 export const serverUrl = import.meta.env.VITE_API_HOSTNAME;
 client.setConfig({
   baseUrl: serverUrl,
-  credentials: 'include'
+  credentials: 'include',
 });
 
 const queryClient = new QueryClient();
@@ -22,5 +22,5 @@ root.render(
       <ReactQueryDevtools initialIsOpen={false} />
       <App />
     </QueryClientProvider>
-  </StrictMode>
+  </StrictMode>,
 );

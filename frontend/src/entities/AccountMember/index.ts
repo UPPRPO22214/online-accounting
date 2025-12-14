@@ -1,5 +1,5 @@
 export {
-  type AccountMember,
+  type MemberRole,
   membersLabels,
   membersChoosableLabels,
 } from './types';
