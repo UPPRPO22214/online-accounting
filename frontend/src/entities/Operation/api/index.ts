@@ -1,7 +1,7 @@
 import { getLocalStorageItem, saveLocalStorageItem } from '@/shared/api';
 import type { Operation } from '../types';
 
-export const getAccountOperations = (accountId: string) => {
+export const getAccountOperations = (accountId: number) => {
   return getLocalStorageItem<Operation[]>(
     `account-${accountId}-operations`,
     [],
@@ -15,7 +15,7 @@ export const getOperation = (operationId: string) => {
   );
 };
 
-export const createOperation = (accountId: string, operation: Operation) => {
+export const createOperation = (accountId: number, operation: Operation) => {
   saveLocalStorageItem<Operation>(`operation-${operation.id}`, operation);
   const operations = getAccountOperations(accountId);
   saveLocalStorageItem<Operation[]>(`account-${accountId}-operations`, [
@@ -24,7 +24,7 @@ export const createOperation = (accountId: string, operation: Operation) => {
   ]);
 };
 
-export const editOperation = (accountId: string, operation: Operation) => {
+export const editOperation = (accountId: number, operation: Operation) => {
   saveLocalStorageItem<Operation>(`operation-${operation.id}`, operation);
   const operations = getAccountOperations(accountId).filter(
     (other) => other.id !== operation.id,
@@ -35,7 +35,7 @@ export const editOperation = (accountId: string, operation: Operation) => {
   ]);
 };
 
-export const deleteOperation = (operationId: string, accountId: string) => {
+export const deleteOperation = (operationId: string, accountId: number) => {
   localStorage.removeItem(`operation-${operationId}`);
   const operations = getAccountOperations(accountId);
   saveLocalStorageItem<Operation[]>(

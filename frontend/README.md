@@ -2,6 +2,11 @@
 ## Стэк
 - `bun 1.2.13`
 
+## Переменные окружения
+```conf
+VITE_API_HOSTNAME=http://example.org/api
+```
+
 ## Разработка
 ```bash
 bun i --frozen-lockfile

@@ -34,7 +34,7 @@ import {
 } from '@/entities/AccountMember';
 
 export const OperationDialogWindow: React.FC = () => {
-  const { accountId } = useParams<{ accountId: string }>();
+  const { accountId } = useParams<{ accountId: number }>();
   const operation = useOperationDialogStore((state) => state.operation);
   const mode = useOperationDialogStore((state) => state.mode);
   const setMode = useOperationDialogStore((state) => state.setMode);

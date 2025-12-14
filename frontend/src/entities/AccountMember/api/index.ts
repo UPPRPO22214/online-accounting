@@ -2,18 +2,18 @@ import { getLocalStorageItem, saveLocalStorageItem } from '@/shared/api';
 import type { AccountMember, MemberRole } from '../types';
 import { getMe, getUsers } from '@/entities/User/@x/accountMember';
 
-export const getAccountMembers = (accountId: string) => {
+export const getAccountMembers = (accountId: number) => {
   return getLocalStorageItem<AccountMember[]>(`members-${accountId}`, []);
 };
 
-export const getMyRole = (accountId: string) => {
+export const getMyRole = (accountId: number) => {
   const me = getMe();
   if (!me) return;
   return getAccountMembers(accountId).find((member) => member.id === me.id);
 };
 
 export const addAccountMember = (
-  accountId: string,
+  accountId: number,
   email: string,
   role: MemberRole,
 ) => {
@@ -31,7 +31,7 @@ export const addAccountMember = (
 };
 
 export const editAccountMember = (
-  accountId: string,
+  accountId: number,
   newMember: AccountMember,
 ) => {
   const members = getAccountMembers(accountId);
@@ -46,7 +46,7 @@ export const editAccountMember = (
 };
 
 export const removeAccountMember = (
-  accountId: string,
+  accountId: number,
   member: AccountMember,
 ) => {
   const members = getAccountMembers(accountId);

@@ -12,7 +12,7 @@ import {
 } from '@/entities/AccountMember';
 
 type OperationsTableProps = HTMLAttributes<HTMLDivElement> & {
-  accountId: string;
+  accountId: number;
 };
 
 export const OperationsTable: React.FC<OperationsTableProps> = ({

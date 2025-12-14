@@ -8,7 +8,7 @@ import {
 
 export const getAccounts = () => getLocalStorageItem<Account[]>('accounts', []);
 
-export const getAccount = (accountId: string) => {
+export const getAccount = (accountId: number) => {
   return getAccounts().find((account) => account.id === accountId);
 };
 

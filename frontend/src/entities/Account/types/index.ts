@@ -1,4 +1,4 @@
 export type Account = {
-  id: string;
+  id: number;
   title: string;
 };

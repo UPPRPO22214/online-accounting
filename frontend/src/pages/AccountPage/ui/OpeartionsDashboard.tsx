@@ -9,7 +9,7 @@ import { OperationsTable } from './OperationsTable';
 import { useAccountOperationsStore } from '../model';
 
 type OpeartionsDashboardProps = HTMLAttributes<HTMLDivElement> & {
-  accountId: string;
+  accountId: number;
 };
 
 export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({

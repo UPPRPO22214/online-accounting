@@ -31,7 +31,7 @@ import { useForm } from 'react-hook-form';
 import type { MemberRole } from '@/entities/AccountMember/types';
 
 type MembersPanelProps = HTMLAttributes<HTMLDivElement> & {
-  accountId: string;
+  accountId: number;
 };
 
 export const MembersPanel: React.FC<MembersPanelProps> = ({
