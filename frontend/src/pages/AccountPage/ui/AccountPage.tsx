@@ -6,7 +6,7 @@ import { OperationDialogWindow } from './OperationDialogWindow';
 import { OpeartionsDashboard } from './OpeartionsDashboard';
 import { MembersPanel } from './MembersPanel';
 import { getMyRole, type AccountMember } from '@/entities/AccountMember';
-import { useAccount } from '@/entities/Account/api/getAccount';
+import { useAccount } from '@/entities/Account/api/useAccount';
 
 export const AccountPage: React.FC = () => {
   const { accountId } = useParams<{ accountId: number }>();

@@ -2,7 +2,7 @@ import type React from 'react';
 import { Link } from 'wouter';
 
 import { Button } from '@/shared/ui';
-import { getMe, logout, type User } from '@/entities/User';
+import { type User } from '@/entities/User';
 import { AccountForm } from './AccountForm';
 import { useEffect, useState } from 'react';
 import { type Account, getUserAccounts } from '@/entities/Account';
@@ -11,9 +11,9 @@ export const ProfileLayout: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   const [user, setUser] = useState<User>();
-  useEffect(() => {
-    setUser(getMe());
-  }, []);
+  // useEffect(() => {
+  //   setUser(getMe());
+  // }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -52,7 +52,7 @@ export const ProfileLayout: React.FC = () => {
           </Link>
         ))}
       </div>
-      <Button
+      {/* <Button
         className="p-1 px-3 hover:cursor-pointer w-fit m-auto"
         onClick={() => {
           logout();
@@ -60,7 +60,7 @@ export const ProfileLayout: React.FC = () => {
         }}
       >
         Выйти
-      </Button>
+      </Button> */}
     </div>
   );
 };

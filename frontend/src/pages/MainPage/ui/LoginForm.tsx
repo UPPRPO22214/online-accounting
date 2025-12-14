@@ -15,7 +15,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
     resolver: zodResolver(loginZodSchema),
   });
 
-  const { login } = useLogin(() => {
+  const { login, isPending, error } = useLogin(() => {
     console.log('logged in');
   });
 
@@ -46,7 +46,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
             formState.errors.password?.message || formState.errors.root?.message
           }
         />
-        <Button className="hover:cursor-pointer">Войти</Button>
+        <Button className="hover:cursor-pointer" disabled={isPending}>
+          {isPending ? 'Загрузка' : 'Войти'}
+        </Button>
+        <ErrorMessage message={error?.message} />
       </form>
     </div>
   );

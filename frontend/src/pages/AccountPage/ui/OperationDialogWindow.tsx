@@ -18,18 +18,12 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useOperationDialogStore } from '../model';
 import { Button, ErrorMessage } from '@/shared/ui';
 import {
-  createOperation,
-  deleteOperation,
-  editOperation,
-} from '@/entities/Operation/api';
-import {
   operationSchema,
   type OperationFormType,
 } from '../types/operationFormTypes';
 import { periodsLabels, type Operation } from '@/entities/Operation/types';
 import {
   checkRole,
-  getMyRole,
   type AccountMember,
 } from '@/entities/AccountMember';
 
@@ -65,10 +59,10 @@ export const OperationDialogWindow: React.FC = () => {
   });
   const [isPeriodic, setIsPeriodic] = useState(false);
 
-  const [meMember, setMeMember] = useState<AccountMember>();
-  useEffect(() => {
-    setMeMember(getMyRole(accountId));
-  }, [accountId]);
+  // const [meMember, setMeMember] = useState<AccountMember>();
+  // useEffect(() => {
+  //   setMeMember(getMyRole(accountId));
+  // }, [accountId]);
 
   return (
     <Dialog

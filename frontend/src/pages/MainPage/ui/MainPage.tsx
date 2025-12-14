@@ -3,15 +3,11 @@ import type React from 'react';
 import { LoginForm } from './LoginForm';
 import { ProfileLayout } from './ProfileLayout';
 import { RegisterForm } from './RegisterForm';
-import { getMe, type User } from '@/entities/User';
-import { useEffect, useState } from 'react';
+import { type User } from '@/entities/User';
+import { useProfile } from '@/entities/User/api';
 
 export const MainPage: React.FC = () => {
-  const [user, setUser] = useState<User>();
-
-  useEffect(() => {
-    setUser(getMe());
-  }, []);
+  const { profile, isLoading, error } = useProfile()
 
   return (
     <div className="w-full flex-col items-center text-center">

@@ -1,4 +1,5 @@
 import type { Operation } from '@/entities/Operation';
+import type { HandlersTransactionResponse } from '@/shared/api';
 import { createWrappedStore } from '@/shared/store';
 
 const NEW_OPERATION: Omit<Operation, 'id'> = {
@@ -12,7 +13,7 @@ type OpeartionFormMode = 'show' | 'edit' | 'create';
 type OperationDialogStoreType = {
   opened: boolean;
   mode: OpeartionFormMode;
-  operation: Operation;
+  operation: HandlersTransactionResponse;
 
   open: (operation: Operation) => void;
   openNew: () => void;

@@ -1,24 +1,11 @@
-type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-export const periodsLabels: Record<PeriodData['period'], string> = {
+export const periodsLabels: Record<Period, string> = {
   daily: 'Ежедневно',
   weekly: 'Еженедельно',
   monthly: 'Ежемесячно',
   yearly: 'Ежегодно',
 };
 
-export const periods = Object.keys(periodsLabels) as PeriodData['period'][];
+export const periods = Object.keys(periodsLabels) as Period[];
 
-export type PeriodData = {
-  period: Period;
-  started_at: string;
-  ended_at?: string;
-};
-
-export type Operation = {
-  id: string;
-  date: string;
-  amount: number;
-  description: string;
-  periodic?: PeriodData;
-};

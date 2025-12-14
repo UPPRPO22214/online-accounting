@@ -3,7 +3,7 @@ import { dataExtractionWrapper, getAccountsById } from '@/shared/api';
 
 export const getAccountQueryOptions = (id: number) =>
   queryOptions({
-    queryKey: ['card', id],
+    queryKey: ['account', id],
     queryFn: () => dataExtractionWrapper(getAccountsById({ path: { id } }))
   });
 

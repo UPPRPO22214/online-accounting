@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createAccount } from '@/entities/Account';
-import { getMe, type User } from '@/entities/User';
+import { type User } from '@/entities/User';
 
 type AccountFormProps = HTMLAttributes<HTMLDivElement>;
 
@@ -16,15 +16,16 @@ const accountZodSchema = z.object({
     .string()
     .min(1, 'Минимум один символ')
     .max(50, 'Максимальная длина названия - 50 символов'),
+  description: z.string().optional()
 });
 
 type AccountCreate = z.infer<typeof accountZodSchema>;
 
 export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
   const [user, setUser] = useState<User>();
-  useEffect(() => {
-    setUser(getMe());
-  }, []);
+  // useEffect(() => {
+  //   setUser(getMe());
+  // }, []);
 
   const { register, handleSubmit, formState } = useForm<AccountCreate>({
     resolver: zodResolver(accountZodSchema),
@@ -45,9 +46,14 @@ export const AccountForm: React.FC<AccountFormProps> = ({ className }) => {
         className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2"
       >
         <input
-          className="md:col-span-5 bg-gray-100 p-1"
+          className="md:col-span-2 bg-gray-100 p-1"
           placeholder="Название счёта"
           {...register('title')}
+        />
+        <input
+          className="md:col-span-3 bg-gray-100 p-1"
+          placeholder="Описание (опционально)"
+          {...register('description')}
         />
         <Button className="hover:cursor-pointer">Создать счёт</Button>
         <ErrorMessage

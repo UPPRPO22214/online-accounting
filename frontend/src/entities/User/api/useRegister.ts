@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataExtractionWrapper, postAuthLogin } from '@/shared/api';
+import { dataExtractionWrapper, postAuthRegister } from '@/shared/api';
 import { getProfileQueryOptions } from './useProfile';
 
-export const useLogin = (onSuccess?: () => void) => {
+export const useRegister = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
-  const { mutate: login, ...rest } = useMutation({
+  const { mutate: register, ...rest } = useMutation({
     mutationFn: (data: {email: string, password: string}) =>
       dataExtractionWrapper(
-        postAuthLogin({
+        postAuthRegister({
           body: {
             ...data
           },
@@ -18,5 +18,5 @@ export const useLogin = (onSuccess?: () => void) => {
       onSuccess?.();
     },
   });
-  return { login, ...rest };
+  return { register, ...rest };
 };
