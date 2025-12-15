@@ -22,7 +22,6 @@ services:
   migrate:
     image: migrate/migrate:latest
     container_name: migrate-db
-    env_file: .env
     volumes:
       - ./backend/migrations:/migrations
     command: [

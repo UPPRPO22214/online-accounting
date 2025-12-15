@@ -23,7 +23,7 @@ services:
     image: migrate/migrate:latest
     container_name: migrate-db
     volumes:
-      - ./backend/migrations:/migrations
+      - ../backend/migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database",
@@ -39,10 +39,10 @@ services:
 
   backend:
     build:
-      context: .
+      context: ../
       dockerfile: ./docker/Dockerfile.back.prod
     image: accounter
-    env_file: .env
+    env_file: ../.env
     ports:
       - "8080:8080"
     depends_on:
@@ -62,7 +62,7 @@ services:
 
   frontend:
     build:
-      context: .
+      context: ../
       dockerfile: ./docker/Dockerfile.front.dev
     image: accounting-front
     ports:
