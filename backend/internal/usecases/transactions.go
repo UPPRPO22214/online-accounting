@@ -59,14 +59,7 @@ func (s *TransactionService) Create(
 	}
 
 	// Если период указан - создаём 500 периодических транзакций
-	err = s.transactions.CreatePeriodicTransactions(ctx, params, 500)
-	if err != nil {
-		return 0, err
-	}
-
-	// Возвращаем ID первой созданной транзакции
-	// (в данном случае это не критично, так как создаётся много записей)
-	return 1, nil
+	return s.transactions.CreatePeriodicTransactions(ctx, params, 500)
 }
 
 // GetByID получает транзакцию по ID

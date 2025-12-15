@@ -8,11 +8,9 @@ import { OperationsTable } from './OperationsTable';
 import { useAccountOperationsStore } from '../model';
 import { useTransactions } from '@/entities/Operation';
 import {
-  type GetAccountsByIdTransactionsData,
   type HandlersTransactionResponse,
 } from '@/shared/api';
 import { isoDateToDate } from '@/shared/types';
-import { XMarkIcon } from '@heroicons/react/20/solid';
 
 type OpeartionsDashboardProps = HTMLAttributes<HTMLDivElement> & {
   accountId: number;
