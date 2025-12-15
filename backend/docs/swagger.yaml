@@ -35,6 +35,7 @@ definitions:
         - viewer
         - editor
         - admin
+        - owner
         example: editor
         type: string
     required:
@@ -164,6 +165,7 @@ definitions:
         - viewer
         - editor
         - admin
+        - owner
         example: editor
         type: string
       user_id:

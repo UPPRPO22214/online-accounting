@@ -1131,7 +1131,8 @@
                     "enum": [
                         "viewer",
                         "editor",
-                        "admin"
+                        "admin",
+                        "owner"
                     ],
                     "example": "editor"
                 }
@@ -1313,7 +1314,8 @@
                     "enum": [
                         "viewer",
                         "editor",
-                        "admin"
+                        "admin",
+                        "owner"
                     ],
                     "example": "editor"
                 },

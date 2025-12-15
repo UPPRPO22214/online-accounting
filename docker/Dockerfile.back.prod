@@ -7,6 +7,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /accounter cmd/api/main.go
 
 
 FROM alpine:latest
+
 # Установка curl для healthcheck
 RUN apk --no-cache add curl
 
