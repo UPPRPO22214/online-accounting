@@ -123,9 +123,10 @@ export const OperationDialogWindow: React.FC = () => {
               </DialogTitle>
               <div className="mt-2 text-lg">
                 Дата:{' '}
-                {isoDateToDate
-                  .decode(operation.occurred_at.split('T')[0])
-                  .toLocaleDateString()}
+                {operation.occurred_at &&
+                  isoDateToDate
+                    .decode(operation.occurred_at.split('T')[0])
+                    .toLocaleDateString()}
               </div>
               <div className="mt-2 text-lg">
                 Сумма:{' '}
