@@ -43,7 +43,7 @@ services:
   backend:
     build:
       context: ../
-      dockerfile: docker/Dockerfile.back.prod
+      dockerfile: docker/Dockerfile.back.dev
     image: accounter
     env_file: ../backend/.env
     ports:

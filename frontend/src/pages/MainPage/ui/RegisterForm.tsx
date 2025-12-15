@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button, ErrorMessage } from '@/shared/ui';
-import { register as regsiterRequest } from '@/entities/User';
 import { registerZodSchema, type RegisterType } from '../types';
+import { useRegister } from '@/entities/User/api';
 
 type RegisterFormProps = HTMLAttributes<HTMLDivElement>;
 
@@ -15,13 +15,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
     resolver: zodResolver(registerZodSchema),
   });
 
+  const { register: registerRequest, isPending, error } = useRegister();
+
   return (
     <div className={clsx('border p-2', className)}>
       <h2 className="text-2xl mb-2">Регистрация</h2>
       <form
         onSubmit={handleSubmit((registerValues) => {
-          regsiterRequest({ ...registerValues });
-          location.reload(); // Убрать все такие релоады, когда будет реальное апи
+          registerRequest({ ...registerValues });
         })}
         className="grid grid-cols-1 gap-4"
       >
@@ -32,12 +33,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
           {...register('email')}
         />
         <ErrorMessage message={formState.errors.email?.message} />
-        <input
-          className="bg-gray-100 p-1"
-          placeholder="Никнейм"
-          {...register('nickname')}
-        />
-        <ErrorMessage message={formState.errors.nickname?.message} />
         <input
           className="bg-gray-100 p-1"
           type="password"
@@ -57,7 +52,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
             formState.errors.root?.message
           }
         />
-        <Button className="hover:cursor-pointer">Зарегистрироваться</Button>
+        <Button className="hover:cursor-pointer" disabled={isPending}>
+          {isPending ? 'Загрузка' : 'Зарегистрироваться'}
+        </Button>
+        <ErrorMessage message={error?.message} />
       </form>
     </div>
   );

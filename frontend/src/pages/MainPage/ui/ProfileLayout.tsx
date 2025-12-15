@@ -1,65 +1,79 @@
 import type React from 'react';
 import { Link } from 'wouter';
 
-import { Button } from '@/shared/ui';
-import { getMe, logout, type User } from '@/entities/User';
+import { Button, Loader, ErrorMessage } from '@/shared/ui';
+import { useProfile } from '@/entities/User';
 import { AccountForm } from './AccountForm';
+import { useAccounts } from '@/entities/Account';
+import { useLogout } from '@/entities/User/api';
+import { membersLabels } from '@/entities/AccountMember';
 import { useEffect, useState } from 'react';
-import { type Account, getUserAccounts } from '@/entities/Account';
+import type { HandlersAccountRoleResponse } from '@/shared/api';
+import { roleCmp } from '@/entities/AccountMember/model';
 
 export const ProfileLayout: React.FC = () => {
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const { user, isLoading: profileLoading, error: profileError } = useProfile();
 
-  const [user, setUser] = useState<User>();
+  const {
+    accounts,
+    isLoading: accountsLoading,
+    error: accountsError,
+  } = useAccounts();
+  const [sortedAccounts, setSortedAccounts] = useState<
+    HandlersAccountRoleResponse[]
+  >([]);
   useEffect(() => {
-    setUser(getMe());
-  }, []);
+    if (!accounts) return;
+    setSortedAccounts(accounts.toSorted((a, b) => -roleCmp(a.role, b.role)));
+  }, [accounts]);
 
-  useEffect(() => {
-    if (!user) return;
-    setAccounts(getUserAccounts(user.id));
-  }, [user]);
-
-  if (!user) return <div>Loading...</div>;
+  const { logout, isPending: logoutPending } = useLogout();
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <h2 className="text-2xl text-center">
-        Привет, {user.nickname} ({user.email})
-      </h2>
-      <h3 className="text-lg mt-4">Мои счета</h3>
-      <AccountForm />
-      <div className="flex justify-around gap-4">
-        {accounts.map((account) => (
-          <Link
-            className="hover:bg-gray-200 transition-base"
-            href={`/account/${account.id}`}
-            key={account.id}
-          >
-            <div className="p-3 border">{account.title}</div>
-          </Link>
-        ))}
-      </div>
-      <h3 className="text-lg mt-4">Доступные счета</h3>
-      <div className="flex justify-around gap-4">
-        {accounts.map((account) => (
-          <Link
-            className="hover:bg-gray-200 transition-base"
-            href={`/account/${account.id}`}
-            key={account.id}
-          >
-            <div className="p-3 border">{account.title}</div>
-          </Link>
-        ))}
-      </div>
+      <Loader isLoading={profileLoading} />
+      <ErrorMessage message={profileError?.message} />
+      {user && (
+        <>
+          <h2 className="text-2xl text-center">Аккаунт {user.email}</h2>
+          <AccountForm />
+        </>
+      )}
+
+      <Loader isLoading={accountsLoading} />
+      <ErrorMessage message={accountsError?.message} />
+      {accounts?.length === 0 ? (
+        <>
+          <h3 className="text-lg mt-4">У вас пока нет доступных счетов</h3>
+          <h4 className="text-md mt-2">
+            Создайте новый или попросите добавить вас к уже существующему
+          </h4>
+        </>
+      ) : (
+        <>
+          <h3 className="text-lg mt-4">Доступные счета</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {sortedAccounts.map((account) => (
+              <Link
+                className="hover:bg-gray-200 transition-base"
+                href={`/account/${account.id}`}
+                key={account.id}
+              >
+                <div className="p-3 border">
+                  {account.name} ({membersLabels[account.role]})
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
       <Button
         className="p-1 px-3 hover:cursor-pointer w-fit m-auto"
         onClick={() => {
           logout();
-          location.reload(); // Убрать все такие релоады, когда будет реальное апи
         }}
       >
-        Выйти
+        {logoutPending ? <Loader /> : 'Выйти'}
       </Button>
     </div>
   );

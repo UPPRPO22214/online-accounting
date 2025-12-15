@@ -10,7 +10,6 @@ export type LoginType = z.infer<typeof loginZodSchema>;
 export const registerZodSchema = loginZodSchema
   .and(
     z.object({
-      nickname: z.string().min(1, 'Никнейм - обязательное поле'),
       passwordTwice: z.string(),
     }),
   )

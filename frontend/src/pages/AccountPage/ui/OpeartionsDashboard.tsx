@@ -3,13 +3,13 @@ import { useEffect, type HTMLAttributes } from 'react';
 import type React from 'react';
 
 import { Button } from '@/shared/ui';
-import { getAccountOperations } from '@/entities/Operation';
 import { OperationsCommonStats } from './OperationsCommonStats';
 import { OperationsTable } from './OperationsTable';
 import { useAccountOperationsStore } from '../model';
+import { useTransactions } from '@/entities/Operation';
 
 type OpeartionsDashboardProps = HTMLAttributes<HTMLDivElement> & {
-  accountId: string;
+  accountId: number;
 };
 
 export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
@@ -19,9 +19,16 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
 }) => {
   const setOperations = useAccountOperationsStore((state) => state.set);
 
+  const { transactions } = useTransactions(accountId);
   useEffect(() => {
-    setOperations(getAccountOperations(accountId));
-  }, [accountId, setOperations]);
+    if (!transactions) return;
+    setOperations(
+      transactions.map((value) => ({
+        amount: value.amount,
+        date: value.occurred_at,
+      })),
+    );
+  }, [transactions, setOperations]);
 
   return (
     <div className={clsx('', className)} {...props}>

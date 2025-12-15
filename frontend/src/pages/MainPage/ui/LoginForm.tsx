@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button, ErrorMessage } from '@/shared/ui';
-import { login } from '@/entities/User';
 import { loginZodSchema, type LoginType } from '../types';
+import { useLogin } from '@/entities/User/api/useLogin';
 
 type LoginFormProps = HTMLAttributes<HTMLDivElement>;
 
@@ -15,13 +15,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
     resolver: zodResolver(loginZodSchema),
   });
 
+  const { login, isPending, error } = useLogin();
+
   return (
     <div className={clsx('border p-2', className)}>
       <h2 className="text-2xl mb-2">Вход</h2>
       <form
         onSubmit={handleSubmit((loginValues) => {
-          login(loginValues.email, loginValues.password);
-          location.reload(); // Убрать все такие релоады, когда будет реальное апи
+          login(loginValues);
         })}
         className="grid grid-cols-1 gap-4"
       >
@@ -43,7 +44,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
             formState.errors.password?.message || formState.errors.root?.message
           }
         />
-        <Button className="hover:cursor-pointer">Войти</Button>
+        <Button className="hover:cursor-pointer" disabled={isPending}>
+          {isPending ? 'Загрузка' : 'Войти'}
+        </Button>
+        <ErrorMessage message={error?.message} />
       </form>
     </div>
   );

@@ -1,15 +1,14 @@
 export {
-  type AccountMember,
+  type MemberRole,
   membersLabels,
   membersChoosableLabels,
 } from './types';
 
 export {
-  getAccountMembers,
-  getMyRole,
-  addAccountMember,
-  editAccountMember,
-  removeAccountMember,
+  useAccountMembers,
+  useAccountMemberCreate,
+  useAccountMemberUpdate,
+  useAccountMemberDelete,
 } from './api';
 
 export { checkRole } from './model';

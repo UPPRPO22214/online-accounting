@@ -1,3 +1,3 @@
-export { getUsers, getMe, register, login, logout } from './api';
+export { useProfile, useLogin, useRegister } from './api';
 
 export type { User } from './types';

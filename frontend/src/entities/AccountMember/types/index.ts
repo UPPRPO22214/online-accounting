@@ -1,21 +1,15 @@
-import type { User } from '@/entities/User/@x/accountMember';
-
-export type MemberRole = 'owner' | 'admin' | 'contributor' | 'viewer';
+export type MemberRole = 'owner' | 'admin' | 'editor' | 'viewer';
 export type MemberChoosableRole = Exclude<MemberRole, 'owner'>;
 
 export const membersLabels: Record<MemberRole, string> = {
   owner: 'Владелец',
   admin: 'Админ',
-  contributor: 'Редактор',
+  editor: 'Редактор',
   viewer: 'Смотрящий',
 };
 
 export const membersChoosableLabels: Record<MemberChoosableRole, string> = {
   admin: membersLabels.admin,
-  contributor: membersLabels.contributor,
+  editor: membersLabels.editor,
   viewer: membersLabels.viewer,
-};
-
-export type AccountMember = User & {
-  role: MemberRole;
 };

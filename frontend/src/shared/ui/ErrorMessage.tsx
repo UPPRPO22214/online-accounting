@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'react';
 import type React from 'react';
 
 type ErrorMessageProps = HTMLAttributes<HTMLSpanElement> & {
-  message?: string;
+  message?: string | null;
 };
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({

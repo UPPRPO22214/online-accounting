@@ -24,8 +24,8 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager, db *
 			"http://kvk-server.ru", "https://kvk-server.ru",
 		},
 		AllowMethods: []string{"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"},
-		ExposeHeaders: []string{"Content-Length"},
+    AllowHeaders: []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"},
+    ExposeHeaders: []string{"Content-Length"},
 	}))
 
 	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
