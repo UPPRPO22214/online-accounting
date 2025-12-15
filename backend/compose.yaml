@@ -19,14 +19,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 80s
+      start_period: 50s
     restart: always
 
   migrate:
     image: migrate/migrate:latest
     container_name: migrate-db
     volumes:
-      - ./backend/migrations:/migrations
+      - ./migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database",
@@ -38,12 +38,7 @@ services:
         condition: service_healthy
     networks:
       - accounter
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 5
-        window: 120s
+    restart: on-failure:5
 
 volumes:
   mysql-data:
