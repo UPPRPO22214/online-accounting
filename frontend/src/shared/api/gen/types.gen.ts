@@ -15,7 +15,7 @@ export type HandlersAccountRoleResponse = {
   description?: string;
   id: number;
   name: string;
-  role: 'viewer' | 'editor' | 'admin';
+  role: 'viewer' | 'editor' | 'admin' | 'owner';
 };
 
 export type HandlersChangePasswordRequest = {
@@ -65,7 +65,7 @@ export type HandlersLoginRequest = {
 
 export type HandlersMemberResponse = {
   email: string;
-  role: 'viewer' | 'editor' | 'admin';
+  role: 'viewer' | 'editor' | 'admin' | 'owner';
   user_id: number;
 };
 

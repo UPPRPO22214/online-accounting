@@ -15,11 +15,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
     resolver: zodResolver(registerZodSchema),
   });
 
-  const {
-    register: registerRequest,
-    isPending,
-    error,
-  } = useRegister();
+  const { register: registerRequest, isPending, error } = useRegister();
 
   return (
     <div className={clsx('border p-2', className)}>

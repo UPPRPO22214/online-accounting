@@ -27,7 +27,10 @@ import {
 import { Button, ErrorMessage, Loader } from '@/shared/ui';
 import { memberSchema, type MemberFormType } from '../types/memberFormTypes';
 import type { MemberRole } from '@/entities/AccountMember/types';
-import type { HandlersChangeRoleRequest, HandlersMemberResponse } from '@/shared/api';
+import type {
+  HandlersChangeRoleRequest,
+  HandlersMemberResponse,
+} from '@/shared/api';
 import { useMeMember } from '@/entities/AccountMember/api/useMeMember';
 import { roleCmp } from '@/entities/AccountMember/model';
 
@@ -45,10 +48,12 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
     isLoading: membersLoading,
     error: membersError,
   } = useAccountMembers(accountId);
-  const [sortedMembers, setSortedMembers] = useState<HandlersMemberResponse[]>([]);
+  const [sortedMembers, setSortedMembers] = useState<HandlersMemberResponse[]>(
+    [],
+  );
   useEffect(() => {
     if (!members) return;
-    setSortedMembers(members.toSorted((a, b) => -roleCmp(a.role, b.role)))
+    setSortedMembers(members.toSorted((a, b) => -roleCmp(a.role, b.role)));
   }, [members]);
 
   const {
@@ -126,7 +131,7 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                               defaultValue={member.role}
                               onChange={(e) => {
                                 updateAccountMember({
-                                  userId: member.user_id!,
+                                  userId: member.user_id,
                                   role: e.target
                                     .value as HandlersChangeRoleRequest['role'],
                                 });
@@ -167,7 +172,7 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
                         {member.role !== 'owner' && (
                           <Button
                             onClick={() => {
-                              deleteAccountMember({ userId: member.user_id! });
+                              deleteAccountMember({ userId: member.user_id });
                             }}
                           >
                             {deleteAccountMemberPending ? (

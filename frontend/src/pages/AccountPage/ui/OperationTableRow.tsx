@@ -18,7 +18,7 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
   const [amountColor, setAmountColor] = useState<string>();
 
   useEffect(() => {
-    setAmountColor(getAmountColorClass(Number.parseFloat(operation.amount!)));
+    setAmountColor(getAmountColorClass(operation.amount));
   }, [operation]);
 
   return (
@@ -37,7 +37,7 @@ export const OperationTableRow: React.FC<OperationsTableProps> = ({
         <>
           <span className="p-1">
             {isoDateToDate
-              .decode(operation.occurred_at!.split('T')[0])
+              .decode(operation.occurred_at.split('T')[0])
               .toLocaleDateString()}
           </span>
           <span className="p-1 border-x">{operation.title}</span>

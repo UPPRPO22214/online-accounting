@@ -1,7 +1,7 @@
 import { type HandlersCreateTransactionRequest } from '@/shared/api';
 import type { NonUndefined } from 'react-hook-form';
 
-export type Period = NonUndefined<HandlersCreateTransactionRequest['period']>
+export type Period = NonUndefined<HandlersCreateTransactionRequest['period']>;
 
 export const periodsLabels: Record<Period, string> = {
   day: 'Ежедневно',

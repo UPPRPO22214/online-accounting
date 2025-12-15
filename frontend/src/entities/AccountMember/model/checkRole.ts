@@ -42,4 +42,4 @@ export const roleCmp = (role1: MemberRole, role2: MemberRole) => {
 
   role1 satisfies never;
   return 0;
-}
+};

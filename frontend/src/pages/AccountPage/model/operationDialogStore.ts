@@ -1,10 +1,17 @@
 import type { HandlersTransactionResponse } from '@/shared/api';
 import { createWrappedStore } from '@/shared/store';
 
-const NEW_OPERATION: Omit<HandlersTransactionResponse, 'id'> = {
+export type StretchedOperation = Pick<
+  HandlersTransactionResponse,
+  'amount' | 'id' | 'occurred_at' | 'title' | 'user_id' | 'period'
+>;
+
+const NEW_OPERATION: StretchedOperation = {
   occurred_at: new Date().toDateString(),
-  amount: '0',
+  amount: 0,
   title: '',
+  id: 0,
+  user_id: 0,
 };
 
 type OpeartionFormMode = 'show' | 'edit' | 'create';
@@ -12,7 +19,7 @@ type OpeartionFormMode = 'show' | 'edit' | 'create';
 type OperationDialogStoreType = {
   opened: boolean;
   mode: OpeartionFormMode;
-  operation: HandlersTransactionResponse;
+  operation: StretchedOperation;
 
   open: (operation: HandlersTransactionResponse) => void;
   openNew: () => void;

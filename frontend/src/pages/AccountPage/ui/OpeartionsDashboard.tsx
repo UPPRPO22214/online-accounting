@@ -24,8 +24,8 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
     if (!transactions) return;
     setOperations(
       transactions.map((value) => ({
-        amount: Number.parseFloat(value.amount!),
-        date: value.occurred_at!,
+        amount: value.amount,
+        date: value.occurred_at,
       })),
     );
   }, [transactions, setOperations]);

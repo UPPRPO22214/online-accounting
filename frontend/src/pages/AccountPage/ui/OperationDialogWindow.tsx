@@ -162,7 +162,10 @@ export const OperationDialogWindow: React.FC = () => {
             <form
               className="text-lg grid grid-cols-1 gap-2"
               onSubmit={handleSubmit((state) => {
-                if (!isPeriodic) state.period = undefined;
+                if (!isPeriodic) delete state.period;
+                state.occurred_at = isoDateToDate
+                  .decode(state.occurred_at)
+                  .toISOString();
                 if (mode === 'create') {
                   createTransaction(state);
                 } else {
@@ -254,6 +257,7 @@ export const OperationDialogWindow: React.FC = () => {
                   {mode === 'edit' && 'Сохранить'}
                 </Button>
               </div>
+              <ErrorMessage message={formState.errors.root?.message} />
             </form>
           )}
         </DialogPanel>
