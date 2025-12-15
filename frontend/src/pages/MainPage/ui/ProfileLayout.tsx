@@ -55,9 +55,9 @@ export const ProfileLayout: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {sortedAccounts.map((account) => (
               <Link
-                className="hover:bg-gray-200 transition-base"
-                href={`/account/${account.id}`}
+                className="w-full h-fit hover:bg-gray-200 transition-base"
                 key={account.id}
+                href={`/account/${account.id}`}
               >
                 <div className="p-3 border">
                   {account.name} ({membersLabels[account.role]})

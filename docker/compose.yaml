@@ -61,8 +61,11 @@ services:
       context: ../
       dockerfile: docker/Dockerfile.front.dev
     image: accounting-front
+    env_file: ../frontend/.env
     ports:
       - "5173:5173"
+    networks:
+      - accounter
 
 volumes:
   mysql-data:

@@ -6,20 +6,21 @@ import { useOperationDialogStore } from '../model';
 import { Button } from '@/shared/ui';
 import { OperationTableRow } from './OperationTableRow';
 import { checkRole } from '@/entities/AccountMember';
-import { useTransactions } from '@/entities/Operation';
 import type { MemberRole } from '@/entities/AccountMember/types';
 import { useMeMember } from '@/entities/AccountMember/api';
+import type { HandlersTransactionResponse } from '@/shared/api';
 
 type OperationsTableProps = HTMLAttributes<HTMLDivElement> & {
   accountId: number;
+  transactions: HandlersTransactionResponse[];
 };
 
 export const OperationsTable: React.FC<OperationsTableProps> = ({
   accountId,
+  transactions,
   className,
   ...props
 }) => {
-  const { transactions } = useTransactions(accountId);
 
   const openNewOpeationDialog = useOperationDialogStore(
     (state) => state.openNew,
@@ -43,7 +44,7 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
           +
         </Button>
       )}
-      {transactions?.map((operation) => (
+      {transactions.map((operation) => (
         <OperationTableRow key={operation.id} operation={operation} />
       ))}
     </div>

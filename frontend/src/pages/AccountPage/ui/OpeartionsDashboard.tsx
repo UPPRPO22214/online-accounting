@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useEffect, type HTMLAttributes } from 'react';
+import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 
 import { Button } from '@/shared/ui';
@@ -7,6 +7,7 @@ import { OperationsCommonStats } from './OperationsCommonStats';
 import { OperationsTable } from './OperationsTable';
 import { useAccountOperationsStore } from '../model';
 import { useTransactions } from '@/entities/Operation';
+import { type HandlersTransactionResponse } from '@/shared/api';
 
 type OpeartionsDashboardProps = HTMLAttributes<HTMLDivElement> & {
   accountId: number;
@@ -20,15 +21,28 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
   const setOperations = useAccountOperationsStore((state) => state.set);
 
   const { transactions } = useTransactions(accountId);
+  const [sortedTransactions, setSortedTransactions] = useState<
+    HandlersTransactionResponse[]
+  >([]);
   useEffect(() => {
     if (!transactions) return;
+    setSortedTransactions(
+      transactions.toSorted((a, b) => {
+        if (a.occurred_at > b.occurred_at) return 1;
+        else if (a.occurred_at < b.occurred_at) return -1;
+        else return 0;
+      }),
+    );
+  }, [transactions]);
+
+  useEffect(() => {
     setOperations(
-      transactions.map((value) => ({
+      sortedTransactions.map((value) => ({
         amount: value.amount,
         date: value.occurred_at,
       })),
     );
-  }, [transactions, setOperations]);
+  }, [sortedTransactions, setOperations]);
 
   return (
     <div className={clsx('', className)} {...props}>
@@ -56,7 +70,7 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
         </div>
       </div>
       <OperationsCommonStats className="my-2" />
-      <OperationsTable accountId={accountId} />
+      <OperationsTable accountId={accountId} transactions={sortedTransactions} />
     </div>
   );
 };
