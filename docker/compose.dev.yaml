@@ -1,6 +1,3 @@
-networks:
-  accounter:
-
 services:
   db:
     image: mysql:8.0-bookworm
@@ -25,6 +22,7 @@ services:
   migrate:
     image: migrate/migrate:latest
     container_name: migrate-db
+    env_file: .env
     volumes:
       - ./backend/migrations:/migrations
     command: [
@@ -39,6 +37,9 @@ services:
     networks:
       - accounter
     restart: on-failure:5
+
+networks:
+  accounter:
 
 volumes:
   mysql-data:
