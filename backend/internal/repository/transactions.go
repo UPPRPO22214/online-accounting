@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"microservices/accounter/internal/models"
@@ -47,31 +49,41 @@ func (r *TransactionRepository) CreatePeriodicTransactions(
 	ctx context.Context,
 	p *models.CreateTransactionParams,
 	count int,
-) error {
-	if !p.Period.Valid {
-		return nil // Не периодическая транзакция
-	}
-
+) (int, error) {
 	currentDate := p.OccurredAt
 
-	for i := 0; i < count; i++ {
-		_, err := r.queries.CreateTransaction(ctx, query.CreateTransactionParams{
-			AccountID:  int32(p.AccountID),
-			UserID:     int32(p.UserID),
-			Title:      p.Title,
-			Amount:     p.Amount,
-			OccurredAt: currentDate,
-			Period:     p.Period,
-		})
-		if err != nil {
-			return err
-		}
+	id, err := r.CreateTransaction(ctx, p)
+	if err != nil {
+		return 0, err
+	}
 
-		// Вычисляем следующую дату в зависимости от периода
+	values := make([]interface{}, 0, count*6)
+	placeholders := make([]string, 0, count)
+	currentDate = calculateNextDate(currentDate, p.Period.TransactionsPeriod)
+
+	for i := 0; i < count-1; i++ {
+		placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?)")
+		values = append(values,
+			p.AccountID,
+			p.UserID,
+			p.Title,
+			p.Amount,
+			currentDate,
+			p.Period.TransactionsPeriod,
+		)
 		currentDate = calculateNextDate(currentDate, p.Period.TransactionsPeriod)
 	}
 
-	return nil
+	// Один SQL запрос
+	sql := fmt.Sprintf(
+		`INSERT INTO transactions (account_id, user_id, title, amount, occurred_at, period)
+         VALUES %s`,
+		strings.Join(placeholders, ", "),
+	)
+
+	_, err = r.db.ExecContext(ctx, sql, values...)
+
+	return id, nil
 }
 
 // GetByID получает транзакцию по ID
