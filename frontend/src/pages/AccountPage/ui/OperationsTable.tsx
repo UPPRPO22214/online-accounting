@@ -21,7 +21,6 @@ export const OperationsTable: React.FC<OperationsTableProps> = ({
   className,
   ...props
 }) => {
-
   const openNewOpeationDialog = useOperationDialogStore(
     (state) => state.openNew,
   );
