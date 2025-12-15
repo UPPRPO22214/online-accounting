@@ -4,7 +4,6 @@ networks:
 services:
   db:
     image: mysql:8.0-bookworm
-    build: ../backend/
     container_name: mysql-db
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
@@ -27,7 +26,7 @@ services:
     image: migrate/migrate:latest
     container_name: migrate-db
     volumes:
-      - ../backend/migrations:/migrations
+      - ./backend/migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database",
