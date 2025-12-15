@@ -45,7 +45,7 @@ type AccountRoleResponse struct {
 	ID          int32   `json:"id" binding:"required" example:"1"`
 	Name        string  `json:"name" binding:"required" example:"Основной счёт"`
 	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
-	Role        string  `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
+	Role        string  `json:"role" binding:"required,oneof=viewer editor admin owner" enums:"viewer,editor,admin,owner" example:"editor"`
 }
 
 // InviteMemberRequest представляет данные для приглашения участника
@@ -58,7 +58,7 @@ type InviteMemberRequest struct {
 type MemberResponse struct {
 	UserID int32  `json:"user_id" binding:"required,user_id" example:"2"`
 	Email  string `json:"email" binding:"required,email" example:"newmember@example.com"`
-	Role   string `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
+	Role   string `json:"role" binding:"required,oneof=viewer editor admin owner" enums:"viewer,editor,admin,owner" example:"editor"`
 }
 
 // ChangeRoleRequest представляет данные для изменения роли участника
