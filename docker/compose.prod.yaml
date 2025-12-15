@@ -1,3 +1,6 @@
+networks:
+  accounter:
+
 services:
   db:
     image: mysql:8.0-bookworm
@@ -72,9 +75,6 @@ services:
         condition: service_healthy
     networks:
       - accounter
-
-networks:
-  accounter:
 
 volumes:
   mysql-data:

@@ -1,3 +1,6 @@
+networks:
+  accounter:
+
 services:
   db:
     image: mysql:8.0-bookworm
@@ -35,10 +38,12 @@ services:
         condition: service_healthy
     networks:
       - accounter
-    restart: on-failure:5
-
-networks:
-  accounter:
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
 
 volumes:
   mysql-data:
