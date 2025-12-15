@@ -32,8 +32,7 @@ SELECT
     am.role
 FROM account_members am
 JOIN accounts a ON a.id = am.account_id
-WHERE am.user_id = ?
-ORDER BY a.id;
+WHERE am.user_id = ?;
 
 -- name: CreateAccount :execresult
 INSERT INTO accounts (name, description, owner_id)
@@ -60,8 +59,9 @@ WHERE account_id = ? AND user_id = ?
 LIMIT 1;
 
 -- name: ListAccountMembers :many
-SELECT user_id, role
-FROM account_members
+SELECT am.user_id, u.email, am.role
+FROM account_members am
+JOIN users u ON u.id = am.user_id
 WHERE account_id = ?;
 
 -- name: RemoveAccountMember :exec
@@ -80,10 +80,9 @@ INSERT INTO transactions (
     title,
     amount,
     occurred_at,
-    category,
-    is_periodic
+    period
 )
-VALUES (?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: GetTransactionByID :one
 SELECT *
@@ -94,20 +93,16 @@ WHERE id = ?;
 SELECT *
 FROM transactions
 WHERE account_id = ?
+    AND (? IS NULL OR user_id = ?)
 
-  AND (? IS NULL OR occurred_at >= ?)
-  AND (? IS NULL OR occurred_at <= ?)
+    AND (? IS NULL OR occurred_at >= ?)
+    AND (? IS NULL OR occurred_at <= ?)
 
-  AND (? IS NULL OR is_periodic = ?)
-
-  AND (
+    AND (
         ? IS NULL
         OR (? = 'income' AND amount > 0)
         OR (? = 'expense' AND amount < 0)
-      )
-
-  AND (? IS NULL OR category IN (sqlc.slice('categories')))
-
+    )
 ORDER BY occurred_at DESC;
 
 -- name: DeleteTransactionByID :exec

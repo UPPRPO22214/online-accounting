@@ -3,6 +3,7 @@ package api
 import (
 	"microservices/accounter/internal/api/handlers"
 	"microservices/accounter/internal/api/middleware"
+	"microservices/accounter/internal/database"
 	"microservices/accounter/internal/tokens"
 	"microservices/accounter/internal/usecases"
 
@@ -12,12 +13,16 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin.Engine {
+func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager, db *database.Database) *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowOrigins: []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowOrigins: []string{
+			"http://localhost:5173", "https://localhost:5173",
+			"http://localhost:5174", "https://localhost:5174",
+			"http://kvk-server.ru", "https://kvk-server.ru",
+		},
 		AllowMethods: []string{"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"},
     AllowHeaders: []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"},
     ExposeHeaders: []string{"Content-Length"},
@@ -30,6 +35,9 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 	authHandler := handlers.NewAuthHandler(services.AuthScv)
 	accountHandler := handlers.NewAccountHandler(services.AccountScv, services.AccountMember)
 	transactionHandler := handlers.NewTransactionHandler(services.TransactionScv)
+	healthHandler := handlers.NewHealthHandler(db)
+
+	router.GET("/health", healthHandler.Health)
 
 	// Public routes
 	auth := router.Group("/auth")
@@ -45,6 +53,7 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 	{
 		auth.POST("/change-password", authHandler.ChangePassword)
 		auth.GET("/profile", authHandler.GetProfile)
+		auth.POST("/logout", authHandler.Logout)
 	}
 
 	// Accounts
@@ -68,6 +77,7 @@ func SetupRouter(services *usecases.Service, jwtManager *tokens.JWTManager) *gin
 
 	// Transactions
 	router.DELETE("/transactions/:id", authMiddleware, transactionHandler.DeleteTransaction)
+	router.PATCH("/transactions/:id", authMiddleware, transactionHandler.UpdateTransaction)
 
 	return router
 }

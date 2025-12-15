@@ -43,7 +43,7 @@ services:
   backend:
     build:
       context: ../
-      dockerfile: docker/Dockerfile.back.dev
+      dockerfile: docker/Dockerfile.back.prod
     image: accounter
     env_file: ../backend/.env
     ports:
@@ -55,6 +55,13 @@ services:
         condition: service_completed_successfully
     networks:
       - accounter
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
 
   frontend:
     build:
@@ -63,6 +70,11 @@ services:
     image: accounting-front
     ports:
       - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - accounter
 
 volumes:
   mysql-data:

@@ -26,14 +26,6 @@ func NewAccountHandler(
 	}
 }
 
-// Account модель счёта
-type Account struct {
-	ID          int32  `json:"id" example:"1"`
-	Name        string `json:"name" example:"Основной счёт"`
-	Description *string
-	Role        string
-}
-
 // CreateAccountRequest представляет данные для создания счёта
 type CreateAccountRequest struct {
 	Name        string  `json:"name" binding:"required" example:"Семейный бюджет"`
@@ -42,10 +34,18 @@ type CreateAccountRequest struct {
 
 // AccountResponse представляет информацию о счёте
 type AccountResponse struct {
-	ID          int32   `json:"id" example:"1"`
-	OwnerID     int32   `json:"owner_id" example:"42"`
-	Name        string  `json:"name" example:"Семейный бюджет"`
+	ID          int32   `json:"id" binding:"required" example:"1"`
+	OwnerID     int32   `json:"owner_id" binding:"required" example:"42"`
+	Name        string  `json:"name" binding:"required" example:"Семейный бюджет"`
 	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
+}
+
+// Account модель счёта
+type AccountRoleResponse struct {
+	ID          int32   `json:"id" binding:"required" example:"1"`
+	Name        string  `json:"name" binding:"required" example:"Основной счёт"`
+	Description *string `json:"description" example:"Общий счёт для домашних расходов"`
+	Role        string  `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
 }
 
 // InviteMemberRequest представляет данные для приглашения участника
@@ -56,15 +56,9 @@ type InviteMemberRequest struct {
 
 // MemberResponse модель участника счёта
 type MemberResponse struct {
-	UserID int    `json:"user_id" example:"2"`
-	Role   string `json:"role" example:"admin"`
-}
-
-// MembersListResponse модель ответа со списком участников
-type MembersListResponse struct {
-	AccountID int              `json:"account_id" example:"1"`
-	Members   []MemberResponse `json:"members"`
-	Count     int              `json:"count" example:"3"`
+	UserID int32  `json:"user_id" binding:"required,user_id" example:"2"`
+	Email  string `json:"email" binding:"required,email" example:"newmember@example.com"`
+	Role   string `json:"role" binding:"required,oneof=viewer editor admin" enums:"viewer,editor,admin" example:"editor"`
 }
 
 // ChangeRoleRequest представляет данные для изменения роли участника
@@ -74,7 +68,7 @@ type ChangeRoleRequest struct {
 
 // IDResponse представляет ответ с ID созданной сущности
 type IDResponse struct {
-	ID int `json:"id" example:"1"`
+	ID int `json:"id" binding:"required" example:"1"`
 }
 
 // CreateAccount godoc
@@ -91,11 +85,7 @@ type IDResponse struct {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при создании счёта"
 // @Router       /accounts [post]
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	userID := c.GetInt("user_id")
 
 	var req CreateAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -105,7 +95,7 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 
 	accountID, err := h.accountService.CreateAccount(
 		c.Request.Context(),
-		userID.(int),
+		userID,
 		req.Name,
 		req.Description,
 	)
@@ -132,15 +122,17 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера"
 // @Router       /accounts/{id} [get]
 func (h *AccountHandler) GetAccount(c *gin.Context) {
-	//userID, exists := c.Get("user_id")
-	//if !exists {
-	//	  c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	//	  return
-	//}
+	userID := c.GetInt("user_id")
 
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid account id"})
+		return
+	}
+
+	err = h.memberService.IsMember(c.Request.Context(), accountID, userID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -168,7 +160,7 @@ func (h *AccountHandler) GetAccount(c *gin.Context) {
 // @Tags         accounts
 // @Security     BearerAuth
 // @Produce      json
-// @Success      200 {array} []Account "Список счетов пользователя"
+// @Success      200 {array} AccountRoleResponse "Список счетов пользователя"
 // @Failure      401 {object} ErrorResponse "Отсутствует или невалидный JWT токен"
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при получении счетов"
 // @Router       /accounts [get]
@@ -186,9 +178,9 @@ func (h *AccountHandler) ListUserAccounts(c *gin.Context) {
 	}
 
 	// Преобразуем в DTO
-	response := make([]Account, 0, len(accounts))
+	response := make([]AccountRoleResponse, 0, len(accounts))
 	for _, acc := range accounts {
-		response = append(response, Account{
+		response = append(response, AccountRoleResponse{
 			ID:          acc.ID,
 			Name:        acc.Name,
 			Description: convertNullString(acc.Description),
@@ -206,7 +198,7 @@ func (h *AccountHandler) ListUserAccounts(c *gin.Context) {
 // @Security     BearerAuth
 // @Produce      json
 // @Param        id path int true "ID счёта" format(int64) example(1)
-// @Success      200 {object} MembersListResponse "Список участников"
+// @Success      200 {array} MemberResponse "Список участников"
 // @Failure      400 {object} ErrorResponse "Неверный ID счёта"
 // @Failure      401 {object} ErrorResponse "Требуется аутентификация"
 // @Failure      403 {object} ErrorResponse "Недостаточно прав"
@@ -236,11 +228,12 @@ func (h *AccountHandler) ListAccountMembers(c *gin.Context) {
 		return
 	}
 
-	resp := make([]gin.H, 0, len(members))
+	resp := make([]MemberResponse, 0, len(members))
 	for _, m := range members {
-		resp = append(resp, gin.H{
-			"user_id": m.UserID,
-			"role":    m.Role,
+		resp = append(resp, MemberResponse{
+			UserID: m.UserID,
+			Email:  m.Email,
+			Role:   string(m.Role),
 		})
 	}
 
@@ -372,11 +365,7 @@ func (h *AccountHandler) InviteMember(c *gin.Context) {
 // @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера при изменении роли"
 // @Router       /accounts/{id}/members/{user_id} [patch]
 func (h *AccountHandler) ChangeRole(c *gin.Context) {
-	ownerID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
+	ownerID := c.GetInt("user_id")
 
 	accountID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -401,7 +390,7 @@ func (h *AccountHandler) ChangeRole(c *gin.Context) {
 	err = h.memberService.ChangeRole(
 		c.Request.Context(),
 		accountID,
-		ownerID.(int),
+		ownerID,
 		memberUserID,
 		role,
 	)
@@ -476,8 +465,6 @@ func parseRole(role string) query.AccountMembersRole {
 		return query.AccountMembersRoleEditor
 	case "admin":
 		return query.AccountMembersRoleAdmin
-	case "owner":
-		return query.AccountMembersRoleOwner
 	default:
 		return query.AccountMembersRoleViewer
 	}

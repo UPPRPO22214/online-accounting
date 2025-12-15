@@ -18,8 +18,8 @@ func NewAuthHandler(service *usecases.AuthService) *AuthHandler {
 
 // UserProfileResponse модель ответа с профилем пользователя
 type UserProfileResponse struct {
-    ID    int    `json:"id" example:"1"`
-    Email string `json:"email" example:"user@example.com"`
+    ID    int    `json:"id" binding:"required" example:"1"`
+    Email string `json:"email" binding:"required" example:"user@example.com"`
 }
 
 // RegisterRequest представляет данные для регистрации пользователя
@@ -41,17 +41,17 @@ type ChangePasswordRequest struct {
 
 // TokenResponse представляет ответ с JWT токеном
 type TokenResponse struct {
-	AccessToken string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MDI1MDAwMDB9.abcdef123456"`
+	AccessToken string `json:"access_token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MDI1MDAwMDB9.abcdef123456"`
 }
 
 // ErrorResponse представляет стандартный ответ с ошибкой
 type ErrorResponse struct {
-	Error string `json:"error" example:"invalid credentials"`
+	Error string `json:"error" binding:"required" example:"invalid credentials"`
 }
 
 // MessageResponse представляет ответ с сообщением об успехе
 type MessageResponse struct {
-	Message string `json:"message" example:"password changed successfully"`
+	Message string `json:"message" binding:"required" example:"password changed successfully"`
 }
 
 // Register godoc
@@ -215,4 +215,30 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
+}
+
+// Logout godoc
+// @Summary      Выход из системы
+// @Description  Удаляет JWT токен из cookies браузера. На клиенте также рекомендуется очистить токен из localStorage/sessionStorage если он там хранится. После выхода требуется повторная авторизация для доступа к защищённым эндпоинтам.
+// @Tags         auth
+// @Produce      json
+// @Success      200 {object} MessageResponse "Успешный выход из системы"
+// @Failure      500 {object} ErrorResponse "Внутренняя ошибка сервера"
+// @Router       /auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+    // Удаляем access_token cookie
+    c.SetCookie(
+        "access_token",   // имя cookie
+        "",               // значение
+        -1,               // максимальный возраст: отрицательный = немедленное удаление
+        "/",              // путь
+        "",               // домен (оставить пустым для текущего домена)
+        false,            // Secure (false для HTTP, true для HTTPS)
+        true,             // HttpOnly (защита от XSS)
+    )
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "successfully logged out",
+        "success": true,
+    })
 }

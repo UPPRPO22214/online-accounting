@@ -1,8 +1,9 @@
 package models
 
 import (
-	"database/sql"
 	"time"
+
+	"microservices/accounter/internal/repository/query"
 )
 
 type CreateTransactionParams struct {
@@ -11,15 +12,19 @@ type CreateTransactionParams struct {
 	Title      string
 	Amount     string
 	OccurredAt time.Time
-	Category   sql.NullString
-	IsPeriodic bool
+	Period     query.NullTransactionsPeriod
+}
+
+type UpdateTransactionParams struct {
+	Title      string
+	Amount     string
+	OccurredAt time.Time
 }
 
 type ListTransactionsFilter struct {
-	AccountID  int
-	DateFrom   *time.Time
-	DateTo     *time.Time
-	IsPeriodic *bool
-	Type       *string   // "income" | "expense"
-	Categories []string
+	AccountID int
+	UserID    *int
+	DateFrom  *time.Time
+	DateTo    *time.Time
+	Type      *string // "income" | "expense"
 }

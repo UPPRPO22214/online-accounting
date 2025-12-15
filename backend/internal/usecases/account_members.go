@@ -44,14 +44,7 @@ func (s *AccountMemberService) Invite(
 	return s.members.AddMember(ctx, accountID, user.ID, role)
 }
 
-func (s *AccountMemberService) ChangeRole(
-	ctx context.Context,
-	accountID int,
-	ownerID int,
-	userID int,
-	role query.AccountMembersRole,
-) error {
-
+func (s *AccountMemberService) ChangeRole(ctx context.Context, accountID, ownerID, userID int, role query.AccountMembersRole) error {
 	if err := s.requireOwner(ctx, accountID, ownerID); err != nil {
 		return err
 	}
@@ -59,13 +52,11 @@ func (s *AccountMemberService) ChangeRole(
 	return s.members.UpdateMemberRole(ctx, accountID, userID, role)
 }
 
-func (s *AccountMemberService) Remove(
-	ctx context.Context,
-	accountID int,
-	ownerID int,
-	userID int,
-) error {
+func (s *AccountMemberService) IsMember(ctx context.Context, accountID, userID int) error {
+	return s.members.IsMember(ctx, accountID, userID)
+}
 
+func (s *AccountMemberService) Remove(ctx context.Context, accountID, ownerID, userID int) error {
 	if err := s.requireOwner(ctx, accountID, ownerID); err != nil {
 		return err
 	}
@@ -73,13 +64,7 @@ func (s *AccountMemberService) Remove(
 	return s.members.RemoveMember(ctx, accountID, userID)
 }
 
-// maybe IsMember
-func (s *AccountMemberService) requireOwner(
-	ctx context.Context,
-	accountID int,
-	userID int,
-) error {
-
+func (s *AccountMemberService) requireOwner(ctx context.Context, accountID, userID int) error {
 	role, err := s.members.GetMemberRole(ctx, accountID, userID)
 	if err != nil {
 		return ErrForbidden

@@ -8,7 +8,6 @@ package query
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 )
 
@@ -63,10 +62,9 @@ INSERT INTO transactions (
     title,
     amount,
     occurred_at,
-    category,
-    is_periodic
+    period
 )
-VALUES (?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateTransactionParams struct {
@@ -75,8 +73,7 @@ type CreateTransactionParams struct {
 	Title      string
 	Amount     string
 	OccurredAt time.Time
-	Category   sql.NullString
-	IsPeriodic bool
+	Period     NullTransactionsPeriod
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (sql.Result, error) {
@@ -86,8 +83,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.Title,
 		arg.Amount,
 		arg.OccurredAt,
-		arg.Category,
-		arg.IsPeriodic,
+		arg.Period,
 	)
 }
 
@@ -164,7 +160,7 @@ func (q *Queries) GetAccountMemberRole(ctx context.Context, arg GetAccountMember
 }
 
 const getTransactionByID = `-- name: GetTransactionByID :one
-SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
+SELECT id, account_id, user_id, title, amount, occurred_at, period
 FROM transactions
 WHERE id = ?
 `
@@ -179,8 +175,7 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id int32) (Transaction
 		&i.Title,
 		&i.Amount,
 		&i.OccurredAt,
-		&i.Category,
-		&i.IsPeriodic,
+		&i.Period,
 	)
 	return i, err
 }
@@ -219,13 +214,15 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, er
 }
 
 const listAccountMembers = `-- name: ListAccountMembers :many
-SELECT user_id, role
-FROM account_members
+SELECT am.user_id, u.email, am.role
+FROM account_members am
+JOIN users u ON u.id = am.user_id
 WHERE account_id = ?
 `
 
 type ListAccountMembersRow struct {
 	UserID int32
+	Email  string
 	Role   AccountMembersRole
 }
 
@@ -238,7 +235,7 @@ func (q *Queries) ListAccountMembers(ctx context.Context, accountID int32) ([]Li
 	var items []ListAccountMembersRow
 	for rows.Next() {
 		var i ListAccountMembersRow
-		if err := rows.Scan(&i.UserID, &i.Role); err != nil {
+		if err := rows.Scan(&i.UserID, &i.Email, &i.Role); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -253,64 +250,48 @@ func (q *Queries) ListAccountMembers(ctx context.Context, accountID int32) ([]Li
 }
 
 const listTransactions = `-- name: ListTransactions :many
-SELECT id, account_id, user_id, title, amount, occurred_at, category, is_periodic
+SELECT id, account_id, user_id, title, amount, occurred_at, period
 FROM transactions
 WHERE account_id = ?
+    AND (? IS NULL OR user_id = ?)
 
-  AND (? IS NULL OR occurred_at >= ?)
-  AND (? IS NULL OR occurred_at <= ?)
+    AND (? IS NULL OR occurred_at >= ?)
+    AND (? IS NULL OR occurred_at <= ?)
 
-  AND (? IS NULL OR is_periodic = ?)
-
-  AND (
+    AND (
         ? IS NULL
         OR (? = 'income' AND amount > 0)
         OR (? = 'expense' AND amount < 0)
-      )
-
-  AND (? IS NULL OR category IN (/*SLICE:categories*/?))
-
+    )
 ORDER BY occurred_at DESC
 `
 
 type ListTransactionsParams struct {
 	AccountID    int32
 	Column2      interface{}
-	OccurredAt   time.Time
+	UserID       int32
 	Column4      interface{}
-	OccurredAt_2 time.Time
+	OccurredAt   time.Time
 	Column6      interface{}
-	IsPeriodic   bool
+	OccurredAt_2 time.Time
 	Column8      interface{}
 	Column9      interface{}
 	Column10     interface{}
-	Column11     interface{}
-	Categories   []sql.NullString
 }
 
 func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error) {
-	query := listTransactions
-	var queryParams []interface{}
-	queryParams = append(queryParams, arg.AccountID)
-	queryParams = append(queryParams, arg.Column2)
-	queryParams = append(queryParams, arg.OccurredAt)
-	queryParams = append(queryParams, arg.Column4)
-	queryParams = append(queryParams, arg.OccurredAt_2)
-	queryParams = append(queryParams, arg.Column6)
-	queryParams = append(queryParams, arg.IsPeriodic)
-	queryParams = append(queryParams, arg.Column8)
-	queryParams = append(queryParams, arg.Column9)
-	queryParams = append(queryParams, arg.Column10)
-	queryParams = append(queryParams, arg.Column11)
-	if len(arg.Categories) > 0 {
-		for _, v := range arg.Categories {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:categories*/?", strings.Repeat(",?", len(arg.Categories))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:categories*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	rows, err := q.db.QueryContext(ctx, listTransactions,
+		arg.AccountID,
+		arg.Column2,
+		arg.UserID,
+		arg.Column4,
+		arg.OccurredAt,
+		arg.Column6,
+		arg.OccurredAt_2,
+		arg.Column8,
+		arg.Column9,
+		arg.Column10,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -325,8 +306,7 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 			&i.Title,
 			&i.Amount,
 			&i.OccurredAt,
-			&i.Category,
-			&i.IsPeriodic,
+			&i.Period,
 		); err != nil {
 			return nil, err
 		}
@@ -350,7 +330,6 @@ SELECT
 FROM account_members am
 JOIN accounts a ON a.id = am.account_id
 WHERE am.user_id = ?
-ORDER BY a.id
 `
 
 type ListUserAccountsRow struct {
