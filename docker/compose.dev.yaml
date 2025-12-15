@@ -4,6 +4,7 @@ networks:
 services:
   db:
     image: mysql:8.0-bookworm
+    build: ../backend/
     container_name: mysql-db
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
