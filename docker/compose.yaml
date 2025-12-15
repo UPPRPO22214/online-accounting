@@ -6,8 +6,8 @@ services:
     image: mysql:8.0-bookworm
     container_name: mysql-db
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      - MYSQL_DATABASE: ${DB_NAME}
     ports:
       - "${DB_PORT}:3306"
     volumes:
@@ -43,9 +43,9 @@ services:
   backend:
     build:
       context: ../
-      dockerfile: ./docker/Dockerfile.back.prod
+      dockerfile: docker/Dockerfile.back.prod
     image: accounter
-    env_file: ../.env
+    env_file: ../backend/.env
     ports:
       - "8080:8080"
     depends_on:
@@ -55,26 +55,14 @@ services:
         condition: service_completed_successfully
     networks:
       - accounter
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
 
   frontend:
     build:
       context: ../
-      dockerfile: ./docker/Dockerfile.front.dev
+      dockerfile: docker/Dockerfile.front.dev
     image: accounting-front
     ports:
       - "5173:5173"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - accounter
 
 volumes:
   mysql-data:
