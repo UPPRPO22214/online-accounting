@@ -6,8 +6,8 @@ services:
     image: mysql:8.0-bookworm
     container_name: mysql-db
     environment:
-      - MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      - MYSQL_DATABASE: ${DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
     ports:
       - "${DB_PORT}:3306"
     volumes:
@@ -19,14 +19,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 80s
+      start_period: 50s
     restart: always
 
   migrate:
     image: migrate/migrate:latest
     container_name: migrate-db
     volumes:
-      - ../backend/migrations:/migrations
+      - ./migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database",
@@ -39,30 +39,6 @@ services:
     networks:
       - accounter
     restart: on-failure:5
-
-  backend:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile.back.prod
-    image: accounter
-    env_file: ../backend/.env
-    ports:
-      - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
-    networks:
-      - accounter
-
-  frontend:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile.front.dev
-    image: accounting-front
-    ports:
-      - "5173:5173"
 
 volumes:
   mysql-data:
