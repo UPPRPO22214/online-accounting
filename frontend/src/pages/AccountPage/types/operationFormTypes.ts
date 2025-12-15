@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const operationSchema = z.object({
+export const operationCreateSchema = z.object({
   title: z.string('Название обязательно'),
   amount: z.coerce.number<number>('Сумма обязательна'),
   occurred_at: z.iso.date('Некорректная дата'),
@@ -14,4 +14,12 @@ export const operationSchema = z.object({
     .optional(),
 });
 
-export type OperationFormType = z.infer<typeof operationSchema>;
+export type OperationCreateFormType = z.infer<typeof operationCreateSchema>;
+
+export const operationEditSchema = z.object({
+  title: z.string('Название обязательно'),
+  amount: z.coerce.number<number>('Сумма обязательна'),
+  occurred_at: z.iso.date('Некорректная дата'),
+});
+
+export type OperationEditFormType = z.infer<typeof operationEditSchema>;

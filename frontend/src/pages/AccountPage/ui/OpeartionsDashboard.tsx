@@ -7,9 +7,7 @@ import { OperationsCommonStats } from './OperationsCommonStats';
 import { OperationsTable } from './OperationsTable';
 import { useAccountOperationsStore } from '../model';
 import { useTransactions } from '@/entities/Operation';
-import {
-  type HandlersTransactionResponse,
-} from '@/shared/api';
+import { type HandlersTransactionResponse } from '@/shared/api';
 import { isoDateToDate } from '@/shared/types';
 
 type OpeartionsDashboardProps = HTMLAttributes<HTMLDivElement> & {
@@ -133,7 +131,11 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
               'transition-base',
               type === 'income' && 'bg-gray-300 border-1',
             )}
-            onClick={() => setType((current) => current === 'income' ? undefined : 'income')}
+            onClick={() =>
+              setType((current) =>
+                current === 'income' ? undefined : 'income',
+              )
+            }
           >
             Только доходы
           </Button>
@@ -142,7 +144,11 @@ export const OpeartionsDashboard: React.FC<OpeartionsDashboardProps> = ({
               'transition-base',
               type === 'expense' && 'bg-gray-300 border-1',
             )}
-            onClick={() => setType((current) => current === 'expense' ? undefined : 'expense')}
+            onClick={() =>
+              setType((current) =>
+                current === 'expense' ? undefined : 'expense',
+              )
+            }
           >
             Только расходы
           </Button>

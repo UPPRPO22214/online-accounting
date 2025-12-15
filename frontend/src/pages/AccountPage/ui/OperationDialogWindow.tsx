@@ -18,8 +18,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useOperationDialogStore } from '../model';
 import { Button, ErrorMessage, Loader } from '@/shared/ui';
 import {
-  operationSchema,
-  type OperationFormType,
+  operationCreateSchema,
+  operationEditSchema,
+  type OperationCreateFormType,
+  type OperationEditFormType,
 } from '../types/operationFormTypes';
 import { periodsLabels, type Period } from '@/entities/Operation/types';
 import { checkRole, type MemberRole } from '@/entities/AccountMember';
@@ -39,14 +41,28 @@ export const OperationDialogWindow: React.FC = () => {
   const opened = useOperationDialogStore((state) => state.opened);
   const close = useOperationDialogStore((state) => state.close);
 
-  const [defaultOperation, setDefaultOperation] = useState<OperationFormType>();
-  const { register, formState, handleSubmit, control } =
-    useForm<OperationFormType>({
-      resolver: zodResolver(operationSchema),
-      values: defaultOperation,
-    });
+  const [defaultOperation, setDefaultOperation] =
+    useState<OperationCreateFormType>();
+  const {
+    register: createRegister,
+    formState: createState,
+    handleSubmit: handleSubmitCreate,
+    control: controlCreate,
+  } = useForm<OperationCreateFormType>({
+    resolver: zodResolver(operationCreateSchema),
+    values: defaultOperation,
+  });
+  const {
+    register: editRegister,
+    formState: editState,
+    handleSubmit: handleSubmitEdit,
+    control: controlEdit,
+  } = useForm<OperationEditFormType>({
+    resolver: zodResolver(operationEditSchema),
+    values: defaultOperation,
+  });
   useEffect(() => {
-    const defaultOpeationValues: OperationFormType = {
+    const defaultOpeationValues: OperationCreateFormType = {
       title: operation.title,
       amount: operation.amount,
       occurred_at: operation.occurred_at,
@@ -56,9 +72,14 @@ export const OperationDialogWindow: React.FC = () => {
     setDefaultOperation(defaultOpeationValues);
   }, [operation]);
 
-  const amount = useWatch({
+  const amountCreate = useWatch({
     name: 'amount',
-    control,
+    control: controlCreate,
+  });
+
+  const amountEdit = useWatch({
+    name: 'amount',
+    control: controlEdit,
   });
   const [isPeriodic, setIsPeriodic] = useState(false);
 
@@ -164,19 +185,16 @@ export const OperationDialogWindow: React.FC = () => {
               <ErrorMessage message={deleteError?.message} />
             </>
           )}
-          {canChange && mode !== 'show' && (
+          {canChange && mode === 'create' && (
             <form
               className="text-lg grid grid-cols-1 gap-2"
-              onSubmit={handleSubmit((state) => {
+              onSubmit={handleSubmitCreate((state) => {
                 if (!isPeriodic) delete state.period;
                 state.occurred_at = isoDateToDate
                   .decode(state.occurred_at)
                   .toISOString();
-                if (mode === 'create') {
-                  createTransaction(state);
-                } else {
-                  updateTransaction(state);
-                }
+                console.log(mode, state);
+                createTransaction(state);
               })}
             >
               <Field className="flex justify-start items-center gap-x-2">
@@ -184,19 +202,19 @@ export const OperationDialogWindow: React.FC = () => {
                 <input
                   className="font-medium p-1 bg-gray-100"
                   placeholder="Описание операции"
-                  {...register('title')}
+                  {...createRegister('title')}
                 />
               </Field>
-              <ErrorMessage message={formState.errors.title?.message} />
+              <ErrorMessage message={createState.errors.title?.message} />
               <Field className="flex justify-start items-center gap-x-2">
                 <Label>{isPeriodic ? 'Начальная дата' : 'Дата'}</Label>
                 <input
                   className="p-1 bg-gray-100"
                   type="date"
-                  {...register('occurred_at')}
+                  {...createRegister('occurred_at')}
                 />
               </Field>
-              <ErrorMessage message={formState.errors.occurred_at?.message} />
+              <ErrorMessage message={createState.errors.occurred_at?.message} />
               <Field className="flex justify-start items-center gap-x-2">
                 <Label>Сумма</Label>
                 <input
@@ -204,72 +222,121 @@ export const OperationDialogWindow: React.FC = () => {
                   type="number"
                   className={clsx(
                     'font-mono p-1 bg-gray-100 transition-base',
-                    amount > 0 && 'bg-green-300',
-                    amount === 0 && 'bg-yellow-200',
-                    amount < 0 && 'bg-red-300',
+                    amountCreate > 0 && 'bg-green-300',
+                    amountCreate === 0 && 'bg-yellow-200',
+                    amountCreate < 0 && 'bg-red-300',
                   )}
-                  {...register('amount')}
+                  {...createRegister('amount')}
                 />
               </Field>
               <span className="text-sm">(может быть отрицательной)</span>
-              <ErrorMessage message={formState.errors.amount?.message} />
-              {mode === 'create' && (
-                <>
-                  <div className="flex justify-start items-center gap-x-2">
-                    <span>Периодическая?</span>
-                    <Checkbox
-                      className="cursor-pointer data-[checked]:bg-green-200 px-2"
-                      checked={isPeriodic}
-                      onChange={setIsPeriodic}
-                      as={Button}
-                    >
-                      {isPeriodic ? 'Да' : 'Нет'}
-                    </Checkbox>
-                  </div>
-                  <Transition show={isPeriodic}>
-                    <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
-                      <Field className="flex justify-start items-center gap-x-2">
-                        <Label>Период</Label>
-                        <Select className="border-1" {...register('period')}>
-                          {/* <Select className="border-1"> */}
-                          {Object.entries(periodsLabels).map(
-                            ([period, label]) => (
-                              <option label={label} value={period} key={period}>
-                                {period}
-                              </option>
-                            ),
-                          )}
-                        </Select>
-                      </Field>
-                    </div>
-                  </Transition>
-                </>
-              )}
+              <ErrorMessage message={createState.errors.amount?.message} />
+              <div className="flex justify-start items-center gap-x-2">
+                <span>Периодическая?</span>
+                <Checkbox
+                  className="cursor-pointer data-[checked]:bg-green-200 px-2"
+                  checked={isPeriodic}
+                  onChange={setIsPeriodic}
+                  as={Button}
+                >
+                  {isPeriodic ? 'Да' : 'Нет'}
+                </Checkbox>
+              </div>
+              <Transition show={isPeriodic}>
+                <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
+                  <Field className="flex justify-start items-center gap-x-2">
+                    <Label>Период</Label>
+                    <Select className="border-1" {...createRegister('period')}>
+                      {/* <Select className="border-1"> */}
+                      {Object.entries(periodsLabels).map(([period, label]) => (
+                        <option label={label} value={period} key={period}>
+                          {period}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+              </Transition>
               <div className="flex justify-around">
                 <Button
                   className="px-2"
                   onClick={() => {
-                    if (mode === 'create') {
-                      close();
-                    } else if (mode === 'edit') {
-                      setMode('show');
-                    }
+                    close();
                   }}
                 >
                   Отмена
                 </Button>
                 <Button type="submit" className="px-2">
-                  {(createPending || updatePending) && <Loader />}
-                  {!createPending && mode === 'create' && 'Создать'}
-                  {!updatePending && mode === 'edit' && 'Сохранить'}
+                  {createPending ? <Loader /> : 'Создать'}
                 </Button>
               </div>
               <ErrorMessage
                 message={
-                  formState.errors.root?.message ||
-                  createError?.message ||
-                  updateError?.message
+                  createState.errors.root?.message || createError?.message
                 }
+              />
+            </form>
+          )}
+          {canChange && mode === 'edit' && (
+            <form
+              className="text-lg grid grid-cols-1 gap-2"
+              onSubmit={handleSubmitEdit((state) => {
+                state.occurred_at = isoDateToDate
+                  .decode(state.occurred_at)
+                  .toISOString();
+                console.log(mode, state);
+                updateTransaction(state);
+              })}
+            >
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>Описание</Label>
+                <input
+                  className="font-medium p-1 bg-gray-100"
+                  placeholder="Описание операции"
+                  {...editRegister('title')}
+                />
+              </Field>
+              <ErrorMessage message={editState.errors.title?.message} />
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>{isPeriodic ? 'Начальная дата' : 'Дата'}</Label>
+                <input
+                  className="p-1 bg-gray-100"
+                  type="date"
+                  {...editRegister('occurred_at')}
+                />
+              </Field>
+              <ErrorMessage message={editState.errors.occurred_at?.message} />
+              <Field className="flex justify-start items-center gap-x-2">
+                <Label>Сумма</Label>
+                <input
+                  placeholder="Сумма операции"
+                  type="number"
+                  className={clsx(
+                    'font-mono p-1 bg-gray-100 transition-base',
+                    amountEdit > 0 && 'bg-green-300',
+                    amountEdit === 0 && 'bg-yellow-200',
+                    amountEdit < 0 && 'bg-red-300',
+                  )}
+                  {...editRegister('amount')}
+                />
+              </Field>
+              <span className="text-sm">(может быть отрицательной)</span>
+              <ErrorMessage message={editState.errors.amount?.message} />
+              <div className="flex justify-around">
+                <Button
+                  className="px-2"
+                  onClick={() => {
+                    setMode('show');
+                  }}
+                >
+                  Отмена
+                </Button>
+                <Button type="submit" className="px-2">
+                  {updatePending ? <Loader /> : 'Сохранить'}
+                </Button>
+              </div>
+              <ErrorMessage
+                message={editState.errors.root?.message || updateError?.message}
               />
             </form>
           )}

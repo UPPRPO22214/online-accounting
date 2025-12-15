@@ -5,14 +5,22 @@ import {
   type GetAccountsByIdTransactionsData,
 } from '@/shared/api';
 
-export const getTransactionsQueryOptions = (id: number, query?: GetAccountsByIdTransactionsData['query'] ) =>
+export const getTransactionsQueryOptions = (
+  id: number,
+  query?: GetAccountsByIdTransactionsData['query'],
+) =>
   queryOptions({
     queryKey: ['transactions', id, query ? JSON.stringify(query) : ''],
     queryFn: () =>
-      dataExtractionWrapper(getAccountsByIdTransactions({ path: { id }, query })),
+      dataExtractionWrapper(
+        getAccountsByIdTransactions({ path: { id }, query }),
+      ),
   });
 
-export const useTransactions = (id: number, query?: GetAccountsByIdTransactionsData['query'] ) => {
+export const useTransactions = (
+  id: number,
+  query?: GetAccountsByIdTransactionsData['query'],
+) => {
   const { data: transactions, ...rest } = useQuery(
     getTransactionsQueryOptions(id, query),
   );
