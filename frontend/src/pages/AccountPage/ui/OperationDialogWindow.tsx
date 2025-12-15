@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { useOperationDialogStore } from '../model';
-import { Button, ErrorMessage } from '@/shared/ui';
+import { Button, ErrorMessage, Loader } from '@/shared/ui';
 import {
   operationSchema,
   type OperationFormType,
@@ -62,23 +62,27 @@ export const OperationDialogWindow: React.FC = () => {
   });
   const [isPeriodic, setIsPeriodic] = useState(false);
 
-  const { createTransaction } = useTransactionCreate(accountId, () => {
+  const {
+    createTransaction,
+    isPending: createPending,
+    error: createError,
+  } = useTransactionCreate(accountId, () => {
     close();
   });
-  const { updateTransaction } = useTransactionUpdate(
-    accountId,
-    operation.id,
-    () => {
-      close();
-    },
-  );
-  const { deleteTransaction } = useTransactionDelete(
-    accountId,
-    operation.id,
-    () => {
-      close();
-    },
-  );
+  const {
+    updateTransaction,
+    isPending: updatePending,
+    error: updateError,
+  } = useTransactionUpdate(accountId, operation.id, () => {
+    close();
+  });
+  const {
+    deleteTransaction,
+    isPending: deletePending,
+    error: deleteError,
+  } = useTransactionDelete(accountId, operation.id, () => {
+    close();
+  });
 
   const { meMember } = useMeMember(accountId);
 
@@ -151,11 +155,12 @@ export const OperationDialogWindow: React.FC = () => {
                         deleteTransaction();
                       }}
                     >
-                      Удалить
+                      {deletePending ? <Loader /> : 'Удалить'}
                     </Button>
                   </>
                 )}
               </div>
+              <ErrorMessage message={deleteError?.message} />
             </>
           )}
           {canChange && mode !== 'show' && (
@@ -253,11 +258,18 @@ export const OperationDialogWindow: React.FC = () => {
                   Отмена
                 </Button>
                 <Button type="submit" className="px-2">
-                  {mode === 'create' && 'Создать'}
-                  {mode === 'edit' && 'Сохранить'}
+                  {(createPending || updatePending) && <Loader />}
+                  {!createPending && mode === 'create' && 'Создать'}
+                  {!updatePending && mode === 'edit' && 'Сохранить'}
                 </Button>
               </div>
-              <ErrorMessage message={formState.errors.root?.message} />
+              <ErrorMessage
+                message={
+                  formState.errors.root?.message ||
+                  createError?.message ||
+                  updateError?.message
+                }
+              />
             </form>
           )}
         </DialogPanel>
