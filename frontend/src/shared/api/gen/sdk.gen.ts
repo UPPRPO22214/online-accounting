@@ -27,9 +27,15 @@ import type {
   GetAuthProfileData,
   GetAuthProfileErrors,
   GetAuthProfileResponses,
+  GetHealthData,
+  GetHealthErrors,
+  GetHealthResponses,
   PatchAccountsByIdMembersByUserIdData,
   PatchAccountsByIdMembersByUserIdErrors,
   PatchAccountsByIdMembersByUserIdResponses,
+  PatchTransactionsByIdData,
+  PatchTransactionsByIdErrors,
+  PatchTransactionsByIdResponses,
   PostAccountsByIdMembersData,
   PostAccountsByIdMembersErrors,
   PostAccountsByIdMembersResponses,
@@ -45,6 +51,9 @@ import type {
   PostAuthLoginData,
   PostAuthLoginErrors,
   PostAuthLoginResponses,
+  PostAuthLogoutData,
+  PostAuthLogoutErrors,
+  PostAuthLogoutResponses,
   PostAuthRegisterData,
   PostAuthRegisterErrors,
   PostAuthRegisterResponses,
@@ -207,7 +216,7 @@ export const patchAccountsByIdMembersByUserId = <
 /**
  * Список транзакций с фильтрацией
  *
- * Возвращает список транзакций счёта с возможностью фильтрации. Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to (временной диапазон в RFC3339), type (income/expense для доходов/расходов), is_periodic (только периодические), categories (массив категорий). Все фильтры опциональны и могут комбинироваться.
+ * Возвращает список транзакций счёта с возможностью фильтрации. Доступно всем участникам счёта (включая Viewer). Фильтры: date_from/date_to (временной диапазон в RFC3339), type (income/expense для доходов/расходов), user_id (транзакции конкретного пользователя). Все фильтры опциональны и могут комбинироваться. Возвращаются все транзакции (включая периодические), соответствующие фильтрам, отсортированные по дате (новые первыми).
  */
 export const getAccountsByIdTransactions = <
   ThrowOnError extends boolean = false,
@@ -221,9 +230,9 @@ export const getAccountsByIdTransactions = <
   >({ url: '/accounts/{id}/transactions', ...options });
 
 /**
- * Создание транзакции
+ * Создание транзакции (обычной или периодической)
  *
- * Создаёт новую финансовую транзакцию в счёте. Доступно участникам с ролью Editor и выше. Amount: положительное число для дохода, отрицательное для расхода. Поле occurred_at опционально (по умолчанию текущее время). Category опционально. IsPeriodic для периодических платежей (зарплата, аренда и т.д.).
+ * Создаёт финансовую транзакцию в счёте. Доступно участникам с ролью Editor и выше. Amount: положительное число для дохода, отрицательное для расхода. Если указан период (day/week/month/year), автоматически создаётся 500 периодических записей с указанным интервалом. Например, period="week" создаст транзакции с интервалом в 7 дней на ~9.6 лет вперёд. Это удобно для регулярных платежей: зарплата, аренда, подписки.
  */
 export const postAccountsByIdTransactions = <
   ThrowOnError extends boolean = false,
@@ -286,6 +295,20 @@ export const postAuthLogin = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Выход из системы
+ *
+ * Удаляет JWT токен из cookies браузера. На клиенте также рекомендуется очистить токен из localStorage/sessionStorage если он там хранится. После выхода требуется повторная авторизация для доступа к защищённым эндпоинтам.
+ */
+export const postAuthLogout = <ThrowOnError extends boolean = false>(
+  options?: Options<PostAuthLogoutData, ThrowOnError>,
+) =>
+  (options?.client ?? client).post<
+    PostAuthLogoutResponses,
+    PostAuthLogoutErrors,
+    ThrowOnError
+  >({ url: '/auth/logout', ...options });
+
+/**
  * Получение профиля пользователя
  *
  * Возвращает информацию о текущем аутентифицированном пользователе на основе JWT токена. Включает основные данные пользователя (ID, email). Для получения профиля требуется валидный JWT токен.
@@ -321,9 +344,23 @@ export const postAuthRegister = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Проверка состояния сервиса
+ *
+ * Возвращает статус сервиса и его зависимостей (база данных). Используется для healthcheck в Docker и Kubernetes. Статус "ok" означает что все компоненты работают нормально, "degraded" - частичные проблемы, "unavailable" - сервис недоступен.
+ */
+export const getHealth = <ThrowOnError extends boolean = false>(
+  options?: Options<GetHealthData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<
+    GetHealthResponses,
+    GetHealthErrors,
+    ThrowOnError
+  >({ url: '/health', ...options });
+
+/**
  * Удаление транзакции
  *
- * Удаляет транзакцию из счёта. Права доступа: Editor может удалять только свои транзакции (созданные им), Admin и Owner могут удалять любые транзакции. Viewer не может удалять транзакции. Операция необратима. Транзакция автоматически получается по ID для проверки прав доступа.
+ * Удаляет транзакцию из счёта. Права доступа: Editor может удалять только свои транзакции (созданные им), Admin и Owner могут удалять любые транзакции. Viewer не может удалять транзакции. Операция необратима. Транзакция автоматически получается по ID для проверки прав доступа. ВАЖНО: при удалении периодической транзакции удаляется только одна запись, а не вся серия.
  */
 export const deleteTransactionsById = <ThrowOnError extends boolean = false>(
   options: Options<DeleteTransactionsByIdData, ThrowOnError>,
@@ -333,3 +370,24 @@ export const deleteTransactionsById = <ThrowOnError extends boolean = false>(
     DeleteTransactionsByIdErrors,
     ThrowOnError
   >({ url: '/transactions/{id}', ...options });
+
+/**
+ * Обновление транзакции
+ *
+ * Обновляет поля транзакции: title, amount, occurred_at. Поле period обновить нельзя. Права доступа: Editor может редактировать только свои транзакции (созданные им), Admin и Owner могут редактировать любые транзакции. Viewer не может редактировать транзакции. При обновлении периодической транзакции изменяется только одна запись, а не вся серия.
+ */
+export const patchTransactionsById = <ThrowOnError extends boolean = false>(
+  options: Options<PatchTransactionsByIdData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    PatchTransactionsByIdResponses,
+    PatchTransactionsByIdErrors,
+    ThrowOnError
+  >({
+    url: '/transactions/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });

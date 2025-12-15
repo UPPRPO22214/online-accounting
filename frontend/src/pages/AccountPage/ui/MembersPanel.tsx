@@ -10,7 +10,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
-import { useState, type HTMLAttributes } from 'react';
+import { useEffect, useState, type HTMLAttributes } from 'react';
 import type React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -27,8 +27,9 @@ import {
 import { Button, ErrorMessage, Loader } from '@/shared/ui';
 import { memberSchema, type MemberFormType } from '../types/memberFormTypes';
 import type { MemberRole } from '@/entities/AccountMember/types';
-import type { HandlersChangeRoleRequest } from '@/shared/api';
+import type { HandlersChangeRoleRequest, HandlersMemberResponse } from '@/shared/api';
 import { useMeMember } from '@/entities/AccountMember/api/useMeMember';
+import { roleCmp } from '@/entities/AccountMember/model';
 
 type MembersPanelProps = HTMLAttributes<HTMLDivElement> & {
   accountId: number;
@@ -44,6 +45,12 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
     isLoading: membersLoading,
     error: membersError,
   } = useAccountMembers(accountId);
+  const [sortedMembers, setSortedMembers] = useState<HandlersMemberResponse[]>([]);
+  useEffect(() => {
+    if (!members) return;
+    setSortedMembers(members.toSorted((a, b) => -roleCmp(a.role, b.role)))
+  }, [members]);
+
   const {
     meMember,
     isLoading: memberLoading,
@@ -103,14 +110,13 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
               >
                 <h2 className="mb-2 text-center">Участники</h2>
                 <div className="">
-                  {members?.map((member) => (
+                  {sortedMembers.map((member) => (
                     <div
                       className="grid grid-cols-3 gap-x-2 border-1 not-first:border-t-0"
                       key={member.user_id}
                     >
                       <div className="flex justify-start items-center p-1">
-                        {member.user_id}{' '}
-                        {/** TODO: надо хотя бы почту писать */}
+                        {member.email}
                       </div>
                       <div className="flex justify-center items-center gap-x-1 p-1">
                         {editingId === member.user_id ? (

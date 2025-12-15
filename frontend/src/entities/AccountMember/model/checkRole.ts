@@ -25,3 +25,21 @@ export const checkRole = (
   }
   userRole satisfies never;
 };
+
+export const roleCmp = (role1: MemberRole, role2: MemberRole) => {
+  if (role1 === 'owner') return role2 === 'owner' ? 0 : 1;
+  if (role1 === 'admin') {
+    if (role2 === 'owner') return -1;
+    if (role2 === 'admin') return 0;
+    return 1;
+  }
+  if (role1 === 'editor') {
+    if (role2 === 'owner' || role2 === 'admin') return -1;
+    if (role2 === 'editor') return 0;
+    return 1;
+  }
+  if (role1 == 'viewer') return role2 === 'viewer' ? 0 : -1;
+
+  role1 satisfies never;
+  return 0;
+}

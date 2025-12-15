@@ -21,7 +21,7 @@ import {
   operationSchema,
   type OperationFormType,
 } from '../types/operationFormTypes';
-import { periodsLabels } from '@/entities/Operation/types';
+import { periodsLabels, type Period } from '@/entities/Operation/types';
 import { checkRole, type MemberRole } from '@/entities/AccountMember';
 import {
   useTransactionCreate,
@@ -29,6 +29,7 @@ import {
 } from '@/entities/Operation';
 import { useMeMember } from '@/entities/AccountMember/api';
 import { isoDateToDate } from '@/shared/types';
+import { useTransactionUpdate } from '@/entities/Operation/api';
 
 export const OperationDialogWindow: React.FC = () => {
   const { accountId } = useParams<{ accountId: number }>();
@@ -46,12 +47,12 @@ export const OperationDialogWindow: React.FC = () => {
     });
   useEffect(() => {
     const defaultOpeationValues: OperationFormType = {
-      title: operation.title!,
-      amount: Number.parseFloat(operation.amount!),
-      occured_at: operation.occurred_at!,
-      is_periodic: !!operation.is_periodic,
+      title: operation.title,
+      amount: operation.amount,
+      occurred_at: operation.occurred_at,
+      period: operation.period as Period | undefined,
     };
-    setIsPeriodic(!!operation.is_periodic);
+    setIsPeriodic(!!operation.period);
     setDefaultOperation(defaultOpeationValues);
   }, [operation]);
 
@@ -64,9 +65,16 @@ export const OperationDialogWindow: React.FC = () => {
   const { createTransaction } = useTransactionCreate(accountId, () => {
     close();
   });
+  const { updateTransaction } = useTransactionUpdate(
+    accountId,
+    operation.id,
+    () => {
+      close();
+    },
+  );
   const { deleteTransaction } = useTransactionDelete(
     accountId,
-    operation.id!,
+    operation.id,
     () => {
       close();
     },
@@ -112,7 +120,7 @@ export const OperationDialogWindow: React.FC = () => {
               <div className="mt-2 text-lg">
                 Дата:{' '}
                 {isoDateToDate
-                  .decode(operation.occurred_at!.split('T')[0])
+                  .decode(operation.occurred_at.split('T')[0])
                   .toLocaleDateString()}
               </div>
               <div className="mt-2 text-lg">
@@ -120,10 +128,9 @@ export const OperationDialogWindow: React.FC = () => {
                 <span
                   className={clsx(
                     'font-mono p-1',
-                    Number.parseFloat(operation.amount!) > 0 && 'bg-green-300',
-                    Number.parseFloat(operation.amount!) === 0 &&
-                      'bg-yellow-200',
-                    Number.parseFloat(operation.amount!) < 0 && 'bg-red-300',
+                    operation.amount > 0 && 'bg-green-300',
+                    operation.amount === 0 && 'bg-yellow-200',
+                    operation.amount < 0 && 'bg-red-300',
                   )}
                 >
                   {operation.amount}
@@ -155,10 +162,11 @@ export const OperationDialogWindow: React.FC = () => {
             <form
               className="text-lg grid grid-cols-1 gap-2"
               onSubmit={handleSubmit((state) => {
+                if (!isPeriodic) state.period = undefined;
                 if (mode === 'create') {
-                  createTransaction({ ...state, amount: `${state.amount}` });
+                  createTransaction(state);
                 } else {
-                  console.warn('IMPLEMENT UPDATE'); // TODO: !!!
+                  updateTransaction(state);
                 }
               })}
             >
@@ -176,10 +184,10 @@ export const OperationDialogWindow: React.FC = () => {
                 <input
                   className="p-1 bg-gray-100"
                   type="date"
-                  {...register('occured_at')}
+                  {...register('occurred_at')}
                 />
               </Field>
-              <ErrorMessage message={formState.errors.occured_at?.message} />
+              <ErrorMessage message={formState.errors.occurred_at?.message} />
               <Field className="flex justify-start items-center gap-x-2">
                 <Label>Сумма</Label>
                 <input
@@ -196,32 +204,38 @@ export const OperationDialogWindow: React.FC = () => {
               </Field>
               <span className="text-sm">(может быть отрицательной)</span>
               <ErrorMessage message={formState.errors.amount?.message} />
-              <div className="flex justify-start items-center gap-x-2">
-                <span>Периодическая?</span>
-                <Checkbox
-                  className="cursor-pointer data-[checked]:bg-green-200 px-2"
-                  checked={isPeriodic}
-                  onChange={setIsPeriodic}
-                  as={Button}
-                >
-                  {isPeriodic ? 'Да' : 'Нет'}
-                </Checkbox>
-              </div>
-              <Transition show={isPeriodic}>
-                <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
-                  <Field className="flex justify-start items-center gap-x-2">
-                    <Label>Период</Label>
-                    {/* <Select className="border-1" {...register('period')}> */}
-                    <Select className="border-1">
-                      {Object.entries(periodsLabels).map(([period, label]) => (
-                        <option label={label} value={period} key={period}>
-                          {period}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                </div>
-              </Transition>
+              {mode === 'create' && (
+                <>
+                  <div className="flex justify-start items-center gap-x-2">
+                    <span>Периодическая?</span>
+                    <Checkbox
+                      className="cursor-pointer data-[checked]:bg-green-200 px-2"
+                      checked={isPeriodic}
+                      onChange={setIsPeriodic}
+                      as={Button}
+                    >
+                      {isPeriodic ? 'Да' : 'Нет'}
+                    </Checkbox>
+                  </div>
+                  <Transition show={isPeriodic}>
+                    <div className="grid grid-cols-1 gap-1 transition-base data-closed:opacity-0 data-closed:scale-0">
+                      <Field className="flex justify-start items-center gap-x-2">
+                        <Label>Период</Label>
+                        <Select className="border-1" {...register('period')}>
+                          {/* <Select className="border-1"> */}
+                          {Object.entries(periodsLabels).map(
+                            ([period, label]) => (
+                              <option label={label} value={period} key={period}>
+                                {period}
+                              </option>
+                            ),
+                          )}
+                        </Select>
+                      </Field>
+                    </div>
+                  </Transition>
+                </>
+              )}
               <div className="flex justify-around">
                 <Button
                   className="px-2"

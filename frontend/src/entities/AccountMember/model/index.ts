@@ -1,1 +1,1 @@
-export { checkRole } from './checkRole';
+export { checkRole, roleCmp } from './checkRole';

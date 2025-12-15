@@ -19,9 +19,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ className }) => {
     register: registerRequest,
     isPending,
     error,
-  } = useRegister(() => {
-    console.log('registered');
-  });
+  } = useRegister();
 
   return (
     <div className={clsx('border p-2', className)}>

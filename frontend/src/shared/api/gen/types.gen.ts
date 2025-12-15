@@ -4,18 +4,18 @@ export type ClientOptions = {
   baseUrl: 'localhost:8080/' | (string & {});
 };
 
-export type HandlersAccount = {
-  description?: string;
-  id?: number;
-  name?: string;
-  role?: string;
-};
-
 export type HandlersAccountResponse = {
   description?: string;
-  id?: number;
-  name?: string;
-  owner_id?: number;
+  id: number;
+  name: string;
+  owner_id: number;
+};
+
+export type HandlersAccountRoleResponse = {
+  description?: string;
+  id: number;
+  name: string;
+  role: 'viewer' | 'editor' | 'admin';
 };
 
 export type HandlersChangePasswordRequest = {
@@ -32,19 +32,25 @@ export type HandlersCreateAccountRequest = {
 };
 
 export type HandlersCreateTransactionRequest = {
-  amount: string;
-  category?: string;
-  is_periodic?: boolean;
+  amount: number;
   occurred_at?: string;
+  period?: 'day' | 'week' | 'month' | 'year';
   title: string;
 };
 
 export type HandlersErrorResponse = {
-  error?: string;
+  error: string;
+};
+
+export type HandlersHealthResponse = {
+  services: {
+    [key: string]: string;
+  };
+  status: string;
 };
 
 export type HandlersIdResponse = {
-  id?: number;
+  id: number;
 };
 
 export type HandlersInviteMemberRequest = {
@@ -58,14 +64,13 @@ export type HandlersLoginRequest = {
 };
 
 export type HandlersMemberResponse = {
-  role?: string;
-  user_id?: number;
+  email: string;
+  role: 'viewer' | 'editor' | 'admin';
+  user_id: number;
 };
 
-export type HandlersMembersListResponse = Array<HandlersMemberResponse>;
-
 export type HandlersMessageResponse = {
-  message?: string;
+  message: string;
 };
 
 export type HandlersRegisterRequest = {
@@ -74,23 +79,28 @@ export type HandlersRegisterRequest = {
 };
 
 export type HandlersTokenResponse = {
-  access_token?: string;
+  access_token: string;
 };
 
 export type HandlersTransactionResponse = {
-  account_id?: number;
-  amount?: string;
-  category?: string;
-  id?: number;
-  is_periodic?: boolean;
-  occurred_at?: string;
-  title?: string;
-  user_id?: number;
+  account_id: number;
+  amount: number;
+  id: number;
+  occurred_at: string;
+  period?: string;
+  title: string;
+  user_id: number;
+};
+
+export type HandlersUpdateTransactionRequest = {
+  amount: number;
+  occurred_at: string;
+  title: string;
 };
 
 export type HandlersUserProfileResponse = {
-  email?: string;
-  id?: number;
+  email: string;
+  id: number;
 };
 
 export type GetAccountsData = {
@@ -117,7 +127,7 @@ export type GetAccountsResponses = {
   /**
    * Список счетов пользователя
    */
-  200: Array<HandlersAccount>;
+  200: Array<HandlersAccountRoleResponse>;
 };
 
 export type GetAccountsResponse =
@@ -295,7 +305,7 @@ export type GetAccountsByIdMembersResponses = {
   /**
    * Список участников
    */
-  200: HandlersMembersListResponse;
+  200: Array<HandlersMemberResponse>;
 };
 
 export type GetAccountsByIdMembersResponse =
@@ -474,17 +484,13 @@ export type GetAccountsByIdTransactionsData = {
      */
     date_to?: string;
     /**
-     * Фильтр по периодическим транзакциям. true - только периодические, false - только разовые
-     */
-    is_periodic?: boolean;
-    /**
      * Фильтр по типу транзакции
      */
     type?: 'income' | 'expense';
     /**
-     * Массив категорий для фильтрации. Можно указать несколько через &categories=Еда&categories=Транспорт
+     * Фильтр по ID пользователя (создателя транзакции)
      */
-    categories?: Array<string>;
+    user_id?: number;
   };
   url: '/accounts/{id}/transactions';
 };
@@ -523,7 +529,7 @@ export type GetAccountsByIdTransactionsResponse =
 
 export type PostAccountsByIdTransactionsData = {
   /**
-   * Данные транзакции. Title обязательно, amount в формате строки с точкой как разделителем
+   * Данные транзакции. Title и amount обязательны. occurred_at опционален (по умолчанию текущее время). period опционален (day/week/month/year для периодических платежей)
    */
   body: HandlersCreateTransactionRequest;
   path: {
@@ -538,7 +544,7 @@ export type PostAccountsByIdTransactionsData = {
 
 export type PostAccountsByIdTransactionsErrors = {
   /**
-   * Неверный формат данных. Проверьте формат amount и occurred_at (RFC3339)
+   * Неверный формат данных. Проверьте формат amount, occurred_at (RFC3339) и period (day/week/month/year)
    */
   400: HandlersErrorResponse;
   /**
@@ -560,7 +566,7 @@ export type PostAccountsByIdTransactionsError =
 
 export type PostAccountsByIdTransactionsResponses = {
   /**
-   * Транзакция успешно создана. Возвращается ID новой транзакции
+   * Транзакция успешно создана. Для периодической транзакции создаётся 500 записей
    */
   201: HandlersIdResponse;
 };
@@ -647,6 +653,33 @@ export type PostAuthLoginResponses = {
 export type PostAuthLoginResponse =
   PostAuthLoginResponses[keyof PostAuthLoginResponses];
 
+export type PostAuthLogoutData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/auth/logout';
+};
+
+export type PostAuthLogoutErrors = {
+  /**
+   * Внутренняя ошибка сервера
+   */
+  500: HandlersErrorResponse;
+};
+
+export type PostAuthLogoutError =
+  PostAuthLogoutErrors[keyof PostAuthLogoutErrors];
+
+export type PostAuthLogoutResponses = {
+  /**
+   * Успешный выход из системы
+   */
+  200: HandlersMessageResponse;
+};
+
+export type PostAuthLogoutResponse =
+  PostAuthLogoutResponses[keyof PostAuthLogoutResponses];
+
 export type GetAuthProfileData = {
   body?: never;
   path?: never;
@@ -720,6 +753,31 @@ export type PostAuthRegisterResponses = {
 export type PostAuthRegisterResponse =
   PostAuthRegisterResponses[keyof PostAuthRegisterResponses];
 
+export type GetHealthData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/health';
+};
+
+export type GetHealthErrors = {
+  /**
+   * Сервис недоступен или имеются проблемы с зависимостями
+   */
+  503: HandlersHealthResponse;
+};
+
+export type GetHealthError = GetHealthErrors[keyof GetHealthErrors];
+
+export type GetHealthResponses = {
+  /**
+   * Сервис работает нормально, все зависимости доступны
+   */
+  200: HandlersHealthResponse;
+};
+
+export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
+
 export type DeleteTransactionsByIdData = {
   body?: never;
   path: {
@@ -764,3 +822,54 @@ export type DeleteTransactionsByIdResponses = {
    */
   204: unknown;
 };
+
+export type PatchTransactionsByIdData = {
+  /**
+   * Новые данные транзакции. Все поля обязательны.
+   */
+  body: HandlersUpdateTransactionRequest;
+  path: {
+    /**
+     * ID транзакции для обновления
+     */
+    id: number;
+  };
+  query?: never;
+  url: '/transactions/{id}';
+};
+
+export type PatchTransactionsByIdErrors = {
+  /**
+   * Неверный формат данных или ID транзакции
+   */
+  400: HandlersErrorResponse;
+  /**
+   * Отсутствует или невалидный JWT токен
+   */
+  401: HandlersErrorResponse;
+  /**
+   * Недостаточно прав. Editor может редактировать только свои транзакции, Admin/Owner - любые
+   */
+  403: HandlersErrorResponse;
+  /**
+   * Транзакция с указанным ID не найдена
+   */
+  404: HandlersErrorResponse;
+  /**
+   * Внутренняя ошибка сервера при обновлении транзакции
+   */
+  500: HandlersErrorResponse;
+};
+
+export type PatchTransactionsByIdError =
+  PatchTransactionsByIdErrors[keyof PatchTransactionsByIdErrors];
+
+export type PatchTransactionsByIdResponses = {
+  /**
+   * Транзакция успешно обновлена
+   */
+  200: HandlersMessageResponse;
+};
+
+export type PatchTransactionsByIdResponse =
+  PatchTransactionsByIdResponses[keyof PatchTransactionsByIdResponses];

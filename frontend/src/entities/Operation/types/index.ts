@@ -1,10 +1,13 @@
-export type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
+import { type HandlersCreateTransactionRequest } from '@/shared/api';
+import type { NonUndefined } from 'react-hook-form';
+
+export type Period = NonUndefined<HandlersCreateTransactionRequest['period']>
 
 export const periodsLabels: Record<Period, string> = {
-  daily: 'Ежедневно',
-  weekly: 'Еженедельно',
-  monthly: 'Ежемесячно',
-  yearly: 'Ежегодно',
+  day: 'Ежедневно',
+  week: 'Еженедельно',
+  month: 'Ежемесячно',
+  year: 'Ежегодно',
 };
 
 export const periods = Object.keys(periodsLabels) as Period[];

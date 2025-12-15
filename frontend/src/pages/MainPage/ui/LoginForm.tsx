@@ -15,9 +15,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ className }) => {
     resolver: zodResolver(loginZodSchema),
   });
 
-  const { login, isPending, error } = useLogin(() => {
-    console.log('logged in');
-  });
+  const { login, isPending, error } = useLogin();
 
   return (
     <div className={clsx('border p-2', className)}>
