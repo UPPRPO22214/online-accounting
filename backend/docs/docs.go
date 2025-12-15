@@ -1137,7 +1137,8 @@ const docTemplate = `{
                     "enum": [
                         "viewer",
                         "editor",
-                        "admin"
+                        "admin",
+                        "owner"
                     ],
                     "example": "editor"
                 }
@@ -1319,7 +1320,8 @@ const docTemplate = `{
                     "enum": [
                         "viewer",
                         "editor",
-                        "admin"
+                        "admin",
+                        "owner"
                     ],
                     "example": "editor"
                 },
